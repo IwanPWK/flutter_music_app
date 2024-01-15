@@ -59,6 +59,7 @@ class Home extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 itemCount: snapshot.data?.length,
                 itemBuilder: (BuildContext context, int index) {
+                  log('artist : ${snapshot.data![index].artist}');
                   return Container(
                     decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
                     margin: const EdgeInsets.only(bottom: 4),
@@ -75,7 +76,7 @@ class Home extends StatelessWidget {
                               style: ourStyle(family: bold, size: 15),
                             ),
                             subtitle: Text(
-                              snapshot.data![index].artist.toString(),
+                              snapshot.data![index].artist.toString() == '<unknown>' ? 'Unknown Artist' : snapshot.data![index].artist.toString(),
                               style: ourStyle(family: bold, size: 12),
                             ),
                             leading: QueryArtworkWidget(
@@ -89,7 +90,7 @@ class Home extends StatelessWidget {
                             ),
                             trailing: controller.playIndex.value == index && controller.isPlaying.value
                                 ? const Icon(
-                                    Icons.pause,
+                                    Icons.stop,
                                     size: 26,
                                     color: whiteColor,
                                   )
@@ -105,10 +106,12 @@ class Home extends StatelessWidget {
                               //   ),
                               //   transition: Transition.downToUp,
                               // );
-                              // controller.playSong(
-                              //   snapshot.data![index].uri,
-                              //   index,
-                              // );
+                              controller.playIndex.value == index && controller.isPlaying.value
+                                  ? controller.stopSong()
+                                  : controller.playSong(
+                                      snapshot.data![index].uri,
+                                      index,
+                                    );
                             },
                           ),
                         ],

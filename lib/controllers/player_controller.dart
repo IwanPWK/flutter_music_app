@@ -57,6 +57,7 @@ class PlayerController extends GetxController {
 
   playSong(String? uri, index) {
     playIndex.value = index;
+    log('uri: $uri');
     try {
       audioPlayer.setAudioSource(
         AudioSource.uri(
@@ -85,6 +86,11 @@ class PlayerController extends GetxController {
     } on Exception catch (e) {
       debugPrint(e.toString());
     }*/
+  }
+
+  stopSong() {
+    audioPlayer.stop();
+    isPlaying(false);
   }
 
   updatePosition() {
