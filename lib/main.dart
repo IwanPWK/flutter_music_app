@@ -12,7 +12,8 @@ class MusicApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Music App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: "regular",
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0),
         useMaterial3: true,
       ),
       // home: const MyHomePage(title: 'Flutter Demo Home Page'),
