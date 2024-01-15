@@ -38,6 +38,7 @@ dependencies:
   just_audio: ^0.9.36
   on_audio_query: ^2.9.0
   permission_handler: ^11.0.1
+  device_info_plus: ^9.1.1
 
 dev_dependencies:
   flutter_test:
