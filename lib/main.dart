@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'views/home.dart';
+
 void main() {
   runApp(const MusicApp());
 }
@@ -10,13 +12,14 @@ class MusicApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Music App',
       theme: ThemeData(
         fontFamily: "regular",
         appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0),
         useMaterial3: true,
       ),
-      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const Home(),
     );
   }
 }
