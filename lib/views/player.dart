@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -16,7 +18,12 @@ class Player extends StatelessWidget {
     double size = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(automaticallyImplyLeading: true),
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // remove back button
+        iconTheme: const IconThemeData(
+          color: Colors.white, //change your color here
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
         child: Column(
@@ -24,7 +31,7 @@ class Player extends StatelessWidget {
             Obx(
               () => Expanded(
                 child: Container(
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                  clipBehavior: Clip.antiAliasWithSaveLayer, // make artwork circle shape
                   height: size * 0.8,
                   width: size * 0.8,
                   alignment: Alignment.center,
@@ -141,15 +148,28 @@ class Player extends StatelessWidget {
                                 scale: 2.5,
                                 child: IconButton(
                                   onPressed: () {
-                                    if (controller.isPlaying.value) {
+                                    if (controller.isPlaying.value && controller.value.value != controller.max.value) {
                                       controller.audioPlayer.pause();
                                       controller.isPlaying(false);
+                                      log('nilai value : ${controller.value.value}');
+                                    } else if (controller.isPlaying.value && controller.value.value == controller.max.value) {
+                                      log('periksa data : $data');
+                                      // controller.isPlaying(false);
+                                      controller.startSong();
+                                      log('nilai value : ${controller.max.value}');
+                                      log('nilai position : ${controller.position.value}');
+
+                                      // log('periksa isPlaying 1 : ${controller.isPlaying.value}');
+                                      // controller.startSong();
+                                      // controller.isPlaying(true);
+                                      // log('periksa isPlaying 2 : ${controller.isPlaying.value}');
+                                      // log('periksa controller position : ${controller.position.value != controller.duration.value} ');
                                     } else {
                                       controller.audioPlayer.play();
                                       controller.isPlaying(true);
                                     }
                                   },
-                                  icon: controller.isPlaying.value
+                                  icon: controller.isPlaying.value && controller.value.value != controller.max.value
                                       ? const Icon(
                                           Icons.pause,
                                           color: whiteColor,

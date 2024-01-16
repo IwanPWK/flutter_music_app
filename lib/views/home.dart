@@ -49,6 +49,7 @@ class Home extends StatelessWidget {
               } else {
                 log("cek snapshot : ${snapshot.data}");
                 return ListView.builder(
+                    physics: const BouncingScrollPhysics(),
                     itemCount: snapshot.data!.length,
                     itemBuilder: (BuildContext context, int index) {
                       String folderName = snapshot.data!.keys.elementAt(index);

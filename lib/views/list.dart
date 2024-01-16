@@ -47,6 +47,7 @@ class ListMusic extends StatelessWidget {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.only(bottom: 4),
             child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
                 itemCount: data.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Padding(
@@ -76,19 +77,22 @@ class ListMusic extends StatelessWidget {
                                   size: 32,
                                 ),
                               ),
-                              trailing: controller.playIndex.value == index && controller.isPlaying.value
-                                  ? const Icon(
-                                      Icons.stop,
-                                      size: 26,
-                                      color: whiteColor,
-                                    )
-                                  : const Icon(
-                                      Icons.play_arrow,
-                                      size: 26,
-                                      color: whiteColor,
-                                    ),
+                              trailing:
+                                  controller.playIndex.value == index && controller.isPlaying.value && data[index].uri == controller.playUri.value
+                                      ? const Icon(
+                                          Icons.stop,
+                                          size: 26,
+                                          color: whiteColor,
+                                        )
+                                      : const Icon(
+                                          Icons.play_arrow,
+                                          size: 26,
+                                          color: whiteColor,
+                                        ),
                               onTap: () {
-                                if (controller.playIndex.value == index && controller.isPlaying.value) {
+                                if (controller.playIndex.value == index &&
+                                    controller.isPlaying.value &&
+                                    data[index].uri == controller.playUri.value) {
                                   controller.stopSong();
                                 } else {
                                   controller.playSong(

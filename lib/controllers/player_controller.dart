@@ -19,6 +19,7 @@ class PlayerController extends GetxController {
 
   var playIndex = 0.obs;
   var isPlaying = false.obs;
+  var playUri = ''.obs;
 
   var duration = ''.obs;
   var position = ''.obs;
@@ -66,11 +67,12 @@ class PlayerController extends GetxController {
 
   playSong(String? uri, index) {
     playIndex.value = index;
+    playUri.value = uri!;
     log('uri: $uri');
     try {
       audioPlayer.setAudioSource(
         AudioSource.uri(
-          Uri.parse(uri!),
+          Uri.parse(playUri.value),
         ),
       );
       audioPlayer.play();
@@ -97,9 +99,21 @@ class PlayerController extends GetxController {
     }*/
   }
 
-  stopSong() {
-    audioPlayer.stop();
+  stopSong() async {
+    await audioPlayer.stop();
+  }
+
+  startSong() async {
+    await audioPlayer.stop();
+
+    audioPlayer.dispose;
+
     isPlaying(false);
+    changeDurationToSeconds(0);
+
+    updatePosition();
+    isPlaying(true);
+    await audioPlayer.play();
   }
 
   updatePosition() {
