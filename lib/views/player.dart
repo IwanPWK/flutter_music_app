@@ -140,6 +140,16 @@ class Player extends StatelessWidget {
                               color: bgDarkColor,
                             ),
                           ),
+                          IconButton(
+                            onPressed: () {
+                              controller.stopSongPlayer();
+                            },
+                            icon: const Icon(
+                              Icons.stop,
+                              size: 40,
+                              color: bgDarkColor,
+                            ),
+                          ),
                           Obx(
                             () => CircleAvatar(
                               radius: 35,
@@ -151,19 +161,8 @@ class Player extends StatelessWidget {
                                     if (controller.isPlaying.value && controller.value.value != controller.max.value) {
                                       controller.audioPlayer.pause();
                                       controller.isPlaying(false);
-                                      log('nilai value : ${controller.value.value}');
                                     } else if (controller.isPlaying.value && controller.value.value == controller.max.value) {
-                                      log('periksa data : $data');
-                                      // controller.isPlaying(false);
                                       controller.startSong();
-                                      log('nilai value : ${controller.max.value}');
-                                      log('nilai position : ${controller.position.value}');
-
-                                      // log('periksa isPlaying 1 : ${controller.isPlaying.value}');
-                                      // controller.startSong();
-                                      // controller.isPlaying(true);
-                                      // log('periksa isPlaying 2 : ${controller.isPlaying.value}');
-                                      // log('periksa controller position : ${controller.position.value != controller.duration.value} ');
                                     } else {
                                       controller.audioPlayer.play();
                                       controller.isPlaying(true);

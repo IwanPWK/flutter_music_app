@@ -103,6 +103,16 @@ class PlayerController extends GetxController {
     await audioPlayer.stop();
   }
 
+  stopSongPlayer() async {
+    await audioPlayer.stop();
+    audioPlayer.dispose;
+
+    isPlaying(false);
+    changeDurationToSeconds(0);
+
+    updatePosition();
+  }
+
   startSong() async {
     await audioPlayer.stop();
 
@@ -138,7 +148,7 @@ class PlayerController extends GetxController {
 
   Future<Map<String, List<SongModel>>> queryAndSaveSongs() async {
     // Lakukan querySongs
-    int num = 0;
+
     List<SongModel> queriedSongs = await audioQuery.querySongs(
       ignoreCase: true,
       orderType: OrderType.ASC_OR_SMALLER,
@@ -152,7 +162,6 @@ class PlayerController extends GetxController {
     // log('Jumlah $num');
 
     for (int index = 0; index < queriedSongs.length; index++) {
-      num++;
       var songData = queriedSongs[index].data;
       var queriedSong = queriedSongs[index];
       var directory = getDirectory(songData);
