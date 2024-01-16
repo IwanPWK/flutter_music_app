@@ -6,11 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path/path.dart' as path;
 
 class PlayerController extends GetxController {
   final audioQuery = OnAudioQuery();
   final audioPlayer = AudioPlayer();
-  List<SongModel> songs = <SongModel>[];
+  RxList<SongModel> songs = <SongModel>[].obs;
+  RxList<String> filePaths = <String>[].obs;
+  RxSet<String> folders = <String>{}.obs;
+  RxMap<String, List<SongModel>> groupedFiles = <String, List<SongModel>>{}.obs;
+  RxList<String> directories = <String>[].obs;
 
   var playIndex = 0.obs;
   var isPlaying = false.obs;
@@ -54,6 +59,10 @@ class PlayerController extends GetxController {
       }
     }
   }
+
+  // updtPlayIndex(index) {
+  //   playIndex.value = index;
+  // }
 
   playSong(String? uri, index) {
     playIndex.value = index;
@@ -113,22 +122,67 @@ class PlayerController extends GetxController {
     audioPlayer.seek(duration);
   }
 
-  // Future<void> queryAndSaveSongs() async {
-  //   // Lakukan querySongs
-  //   List<SongModel> queriedSongs = await audioQuery.querySongs(
-  //     ignoreCase: true,
-  //     orderType: OrderType.ASC_OR_SMALLER,
-  //     sortType: null,
-  //     uriType: UriType.EXTERNAL,
-  //   );
+  Future<Map<String, List<SongModel>>> queryAndSaveSongs() async {
+    // Lakukan querySongs
+    int num = 0;
+    List<SongModel> queriedSongs = await audioQuery.querySongs(
+      ignoreCase: true,
+      orderType: OrderType.ASC_OR_SMALLER,
+      sortType: null,
+      uriType: UriType.EXTERNAL,
+    );
+    // num++;
+    // Simpan hasil query ke dalam List songs
+    songs.value = queriedSongs;
+    log('cek songsssssssssss: ${queriedSongs}');
+    // log('Jumlah $num');
 
-  //   // Simpan hasil query ke dalam List songs
-  //   songs = queriedSongs;
+    for (int index = 0; index < queriedSongs.length; index++) {
+      num++;
+      var songData = queriedSongs[index].data;
+      var queriedSong = queriedSongs[index];
+      var directory = getDirectory(songData);
+      String folderName = getFolderName(songData);
+      if (!groupedFiles.containsKey(folderName)) {
+        groupedFiles[folderName] = [];
+      }
+      if (!directories.value.contains(directory)) {
+        directories.value.add(directory);
+      }
+      groupedFiles[folderName]!.add(queriedSong);
+    }
 
-  //   // Tampilkan hasil query jika diperlukan
-  //   log('Total Songs: ${songs.length}');
-  //   for (var song in songs) {
-  //     log('Song Title: ${song.title}, Artist: ${song.artist}');
-  //   }
-  // }
+    log('periksa directories: ${directories.value}');
+    log('Folders Name: ${groupedFiles['listen']}');
+    return groupedFiles;
+  }
+
+  String getFolderName(String filePath) {
+    String directory = getDirectory(filePath);
+    String folderName = path.basename(directory);
+    return folderName;
+  }
+
+  String getDirectory(String filePath) {
+    String directory = path.dirname(filePath);
+    return directory;
+  }
 }
+   // Lakukan sesuatu dengan data lagu, misalnya:
+    // filePaths.value.add(songData);
+
+    // for (String filePath in filePaths) {
+    //   String folderName = getFolderName(filePath);
+    //   if (!groupedFiles.containsKey(folderName)) {
+    //     groupedFiles[folderName] = [];
+    //   }
+    //   groupedFiles[folderName]!.add(queriedSongs);
+    // }
+    // log('Folder Name: $folders');
+
+    // Tampilkan hasil query jika diperlukan
+    // log('Total Songs: ${songs.length}');
+    // log('cek queriedSongs: ${queriedSongs}');
+    // for (var song in songs) {
+    //   log('Song Title: ${song.title}, Artist: ${song.artist}');
+    // }
