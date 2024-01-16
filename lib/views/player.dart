@@ -15,6 +15,14 @@ class Player extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var controller = Get.find<PlayerController>();
+    controller.value.listen((newValue) {
+      if (newValue == controller.max.value && (controller.playIndex.value) < (data.length - 1)) {
+        // Panggil metode atau fungsi yang ingin dijalankan
+        controller.playSong(data[controller.playIndex.value + 1].uri, controller.playIndex.value + 1);
+      } else if (newValue == controller.max.value && (controller.playIndex.value + 1) > (data.length - 1)) {
+        controller.stopSongPlayer();
+      }
+    });
     double size = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: bgColor,
@@ -112,6 +120,15 @@ class Player extends StatelessWidget {
                                 onChanged: (newValue) {
                                   controller.changeDurationToSeconds(newValue.toInt());
                                   newValue = newValue;
+                                  if (newValue == controller.max.value) {
+                                    log('Selesai sudah');
+                                    //   controller.playSong(data[controller.playIndex.value + 1].uri, controller.playIndex.value + 1);
+                                    //   //   // if (data[controller.playIndex.value + 1].uri == null) {
+                                    //   //   log('tes 123');
+                                    //   //   controller.stopSongPlayer();
+                                    //   //   log('tes 456');
+                                    //   //   // }
+                                  }
                                 },
                               ),
                             ),
@@ -161,6 +178,7 @@ class Player extends StatelessWidget {
                                     if (controller.isPlaying.value && controller.value.value != controller.max.value) {
                                       controller.audioPlayer.pause();
                                       controller.isPlaying(false);
+                                      print('next song ${controller.playIndex.value + 1}');
                                     } else if (controller.isPlaying.value && controller.value.value == controller.max.value) {
                                       controller.startSong();
                                     } else {
@@ -184,6 +202,7 @@ class Player extends StatelessWidget {
                           IconButton(
                             onPressed: () {
                               controller.playSong(data[controller.playIndex.value + 1].uri, controller.playIndex.value + 1);
+                              log('cek next : ${data[controller.playIndex.value + 1].uri}, ${controller.playIndex.value + 1}');
                             },
                             icon: const Icon(
                               Icons.skip_next_rounded,

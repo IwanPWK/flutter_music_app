@@ -93,7 +93,7 @@ class ListMusic extends StatelessWidget {
                                 if (controller.playIndex.value == index &&
                                     controller.isPlaying.value &&
                                     data[index].uri == controller.playUri.value) {
-                                  controller.stopSong();
+                                  controller.stopSongPlayer();
                                 } else {
                                   controller.playSong(
                                     data[index].uri,
@@ -112,7 +112,7 @@ class ListMusic extends StatelessWidget {
                                   transition: Transition.downToUp,
                                 );
                                 if (controller.playIndex.value == index && controller.isPlaying.value) {
-                                  controller.stopSong();
+                                  controller.pauseSong();
                                 } else {
                                   controller.playSong(
                                     data[index].uri,

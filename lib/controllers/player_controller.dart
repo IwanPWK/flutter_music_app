@@ -17,9 +17,11 @@ class PlayerController extends GetxController {
   RxMap<String, List<SongModel>> groupedFiles = <String, List<SongModel>>{}.obs;
   RxList<String> directories = <String>[].obs;
 
+  var listLength = 0.obs;
   var playIndex = 0.obs;
   var isPlaying = false.obs;
   var playUri = ''.obs;
+  var nextUri = ''.obs;
 
   var duration = ''.obs;
   var position = ''.obs;
@@ -100,17 +102,27 @@ class PlayerController extends GetxController {
   }
 
   stopSong() async {
+    isPlaying(false);
     await audioPlayer.stop();
   }
 
-  stopSongPlayer() async {
-    await audioPlayer.stop();
-    audioPlayer.dispose;
-
+  pauseSong() async {
     isPlaying(false);
-    changeDurationToSeconds(0);
+    await audioPlayer.pause();
+  }
 
-    updatePosition();
+  stopSongPlayer() async {
+    try {
+      await audioPlayer.stop();
+      audioPlayer.dispose;
+
+      isPlaying(false);
+      changeDurationToSeconds(0);
+
+      updatePosition();
+    } on Exception catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   startSong() async {
