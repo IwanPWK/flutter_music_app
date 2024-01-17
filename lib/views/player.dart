@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_lyric/lyrics_reader.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -9,8 +10,9 @@ import '../controllers/player_controller.dart';
 
 class Player extends StatelessWidget {
   final List<SongModel> data;
+  var lyricUI = UINetease();
 
-  const Player({super.key, required this.data});
+  Player({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class Player extends StatelessWidget {
         controller.stopSongPlayer();
       }
     });
+    // Stream<String> stream = controller.controllerStream.stream;
     double size = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: bgColor,
@@ -37,23 +40,21 @@ class Player extends StatelessWidget {
         child: Column(
           children: [
             Obx(
-              () => Expanded(
-                child: Container(
-                  clipBehavior: Clip.antiAliasWithSaveLayer, // make artwork circle shape
-                  height: size * 0.8,
-                  width: size * 0.8,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.orange),
-                  child: QueryArtworkWidget(
-                    id: data[controller.playIndex.value].id,
-                    type: ArtworkType.AUDIO,
-                    artworkHeight: double.infinity,
-                    artworkWidth: double.infinity,
-                    nullArtworkWidget: const Icon(
-                      Icons.music_note,
-                      size: 40,
-                      color: whiteColor,
-                    ),
+              () => Container(
+                clipBehavior: Clip.antiAliasWithSaveLayer, // make artwork circle shape
+                height: size * 0.8,
+                width: size * 0.8,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.orange),
+                child: QueryArtworkWidget(
+                  id: data[controller.playIndex.value].id,
+                  type: ArtworkType.AUDIO,
+                  artworkHeight: double.infinity,
+                  artworkWidth: double.infinity,
+                  nullArtworkWidget: const Icon(
+                    Icons.music_note,
+                    size: 40,
+                    color: whiteColor,
                   ),
                 ),
               ),
@@ -114,21 +115,12 @@ class Player extends StatelessWidget {
                                 thumbColor: slideColor,
                                 inactiveColor: bgColor,
                                 activeColor: slideColor,
-                                min: const Duration(seconds: 0).inSeconds.toDouble(),
+                                min: const Duration(milliseconds: 0).inMilliseconds.toDouble(),
                                 max: controller.max.value,
                                 value: controller.value.value,
                                 onChanged: (newValue) {
-                                  controller.changeDurationToSeconds(newValue.toInt());
+                                  controller.changeDurationToMilliseconds(newValue.toInt());
                                   newValue = newValue;
-                                  if (newValue == controller.max.value) {
-                                    log('Selesai sudah');
-                                    //   controller.playSong(data[controller.playIndex.value + 1].uri, controller.playIndex.value + 1);
-                                    //   //   // if (data[controller.playIndex.value + 1].uri == null) {
-                                    //   //   log('tes 123');
-                                    //   //   controller.stopSongPlayer();
-                                    //   //   log('tes 456');
-                                    //   //   // }
-                                  }
                                 },
                               ),
                             ),
@@ -176,14 +168,15 @@ class Player extends StatelessWidget {
                                 child: IconButton(
                                   onPressed: () {
                                     if (controller.isPlaying.value && controller.value.value != controller.max.value) {
-                                      controller.audioPlayer.pause();
-                                      controller.isPlaying(false);
+                                      controller.pauseSong();
+                                      // stream.p
                                       print('next song ${controller.playIndex.value + 1}');
                                     } else if (controller.isPlaying.value && controller.value.value == controller.max.value) {
-                                      controller.startSong();
+                                      controller.againSong();
+                                      // controller.isPause(false);
                                     } else {
-                                      controller.audioPlayer.play();
-                                      controller.isPlaying(true);
+                                      controller.startSong();
+                                      controller.testLrc(controller.songLyric.value);
                                     }
                                   },
                                   icon: controller.isPlaying.value && controller.value.value != controller.max.value
@@ -211,6 +204,53 @@ class Player extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(
+                        height: 50,
+                      ),
+                      Expanded(
+                        child: Obx(() {
+                          log('cek Lyric playProgress : ${controller.playProgress.value}');
+                          return LyricsReader(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            model: controller.lyricModel.value,
+                            position: controller.playProgress.value,
+                            lyricUi: lyricUI,
+                            playing: controller.isPlaying.value,
+                            size: Size(double.infinity, MediaQuery.of(context).size.height / 2),
+                            emptyBuilder: () => Center(
+                              child: Text(
+                                "No lyrics",
+                                style: lyricUI.getOtherMainTextStyle(),
+                              ),
+                            ),
+                            selectLineBuilder: (progress, confirm) {
+                              return Row(
+                                children: [
+                                  IconButton(
+                                      onPressed: () {
+                                        LyricsLog.logD("点击事件");
+                                        confirm.call();
+
+                                        controller.changeDurationToMilliseconds(progress);
+                                      },
+                                      icon: Icon(Icons.play_arrow, color: Colors.green)),
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(color: Colors.green),
+                                      height: 1,
+                                      width: double.infinity,
+                                    ),
+                                  ),
+                                  Text(
+                                    progress.toString(),
+                                    style: TextStyle(color: Colors.green),
+                                  )
+                                ],
+                              );
+                            },
+                          );
+                        }),
                       )
                     ],
                   ),

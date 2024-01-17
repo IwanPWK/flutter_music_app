@@ -15,6 +15,8 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var controller = Get.put(PlayerController());
+    controller.readFromFile('storage/emulated/0/download/jason.lrc');
+    log('isi song lirik${controller.songLyric.value}');
 
     return Scaffold(
         backgroundColor: bgDarkColor,
@@ -55,6 +57,7 @@ class Home extends StatelessWidget {
                       String folderName = snapshot.data!.keys.elementAt(index);
                       String directory = controller.directories[index];
                       // List<SongModel> files = controller.groupedFiles[folderName]!;
+                      log('cek snapshot datasss : ${snapshot.data![folderName]!}');
 
                       return Container(
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),

@@ -20,7 +20,7 @@ class MusicApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0),
         useMaterial3: true,
       ),
-      home: Home(),
+      home: const Home(),
     );
   }
 }
