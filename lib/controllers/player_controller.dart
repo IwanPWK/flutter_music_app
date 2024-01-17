@@ -21,6 +21,8 @@ class PlayerController extends GetxController {
   RxSet<String> folders = <String>{}.obs;
   RxMap<String, List<SongModel>> groupedFiles = <String, List<SongModel>>{}.obs;
   RxList<String> directories = <String>[].obs;
+  RxList<SongModel> listMusics = <SongModel>[].obs;
+  RxList<SongModel> foundMusic = <SongModel>[].obs;
   var lyricModel = LyricsModelBuilder.create().bindLyricToMain('').getModel().obs;
   // StreamController<String> controllerStream = StreamController<String>();
   // late StreamSubscription<String> subscription;
@@ -42,7 +44,7 @@ class PlayerController extends GetxController {
   var duration = ''.obs;
   var position = ''.obs;
 
-  var max = 0.0.obs;
+  var max = 11.0.obs;
   var value = 0.0.obs;
 
   @override
@@ -376,6 +378,25 @@ $songLyric
       // showLyric(i.current.lyrics);
       // lrcData = isPause.value ? 'PAUSE' : i.position = 4;
     }
+  }
+
+  void runFilter(String enteredKeyword) {
+    List<SongModel> results = [];
+    log('cek listMusicssss : ${listMusics.value}');
+    if (enteredKeyword.isEmpty) {
+      // if the search field is empty or only contains white-space, we'll display all users
+      results = listMusics.value;
+    } else {
+      results = listMusics.value.where((listMusic) => listMusic.displayNameWOExt.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+    }
+
+    // Refresh the UI
+
+    foundMusic.value = results;
+    log('cek results : $results');
+    log('cek entered keyword : $enteredKeyword');
+    log('cek foundMusic : ${foundMusic.value}');
   }
 }
    // Lakukan sesuatu dengan data lagu, misalnya:

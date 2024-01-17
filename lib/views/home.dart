@@ -85,6 +85,7 @@ class Home extends StatelessWidget {
                                     ),
                                     transition: Transition.downToUp,
                                   );
+                                  log('cek snapshot data : ${snapshot.data![folderName]!}');
                                 },
                               ),
                             ],
