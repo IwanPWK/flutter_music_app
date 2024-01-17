@@ -118,6 +118,8 @@ class ListMusic extends StatelessWidget {
                                     data[index].uri,
                                     index,
                                   );
+                                  controller.showLyric(data[index].data);
+                                  log('datanya 2 : ${data[index].data}');
                                 }
                               }),
                         ],

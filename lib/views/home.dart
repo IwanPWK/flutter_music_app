@@ -15,7 +15,7 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var controller = Get.put(PlayerController());
-    controller.readFromFile('storage/emulated/0/download/jason.lrc');
+    // controller.readFromFile('storage/emulated/0/download/jason\'s lyric.lrc');
     log('isi song lirik${controller.songLyric.value}');
 
     return Scaffold(

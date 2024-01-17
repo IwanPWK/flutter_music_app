@@ -25,7 +25,7 @@ class PlayerController extends GetxController {
   // StreamController<String> controllerStream = StreamController<String>();
   // late StreamSubscription<String> subscription;
 
-  var showLyric = ''.obs;
+  // var showLyric = ''.obs;
   var listLength = 0.obs;
   var playIndex = 0.obs;
   var isPlaying = false.obs;
@@ -118,6 +118,15 @@ class PlayerController extends GetxController {
       updatePosition();
     } on Exception catch (e) {
       debugPrint(e.toString());
+    }
+  }
+
+  void showLyric(String? path) {
+    if (path != null && path != '') {
+      log('showLyric: $path');
+      // var cleanedPath = path.replaceAll("'", "\\'");
+      readFromFile(path);
+      log('cleanedPath: $path');
     }
     /*try {
       ConcatenatingAudioSource(
@@ -263,7 +272,9 @@ class PlayerController extends GetxController {
 
   void readFromFile(String filePath) {
     try {
-      File file = File(filePath);
+      String newPath = removeFileExtension(filePath);
+      log('newPath: $newPath');
+      File file = File(newPath);
 
       if (file.existsSync()) {
         // Baca isi file
@@ -286,6 +297,25 @@ $lyric
 """;
 
     lyricModel.value = LyricsModelBuilder.create().bindLyricToMain(songLyric.value).getModel();
+  }
+
+  String removeFileExtension(String filePath) {
+    String newModifiedPath = '';
+
+    // Mencari posisi titik (.) terakhir dalam path
+    int lastDotIndex = filePath.lastIndexOf('.');
+
+    // Jika titik ditemukan dan bukan merupakan bagian dari direktori (contoh: /path/to/file.xyz/)
+    if (lastDotIndex != -1 && !filePath.substring(lastDotIndex).contains('/')) {
+      // Mengambil substring hingga sebelum titik terakhir
+      String modifiedPath = filePath.substring(0, lastDotIndex);
+      newModifiedPath = '$modifiedPath.lrc';
+    } else {
+      // Jika tidak ada ekstensi, gunakan path asli
+      newModifiedPath = '$filePath.lrc';
+    }
+
+    return newModifiedPath;
   }
 
   testLrc(String songLyric) {
