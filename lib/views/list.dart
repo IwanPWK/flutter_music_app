@@ -15,23 +15,24 @@ class ListMusic extends StatelessWidget {
   StreamSubscription? subscription;
 
   ListMusic({super.key, required this.data});
-  void autoNextPlay(int index, PlayerController controller) {
-    subscription = controller.value.listen((newValue) {
-      'log(cek max value : ${controller.max.value})';
-      if (newValue == controller.max.value && (index) < (data.length - 1)) {
-        log('cek max value : ${controller.max.value}');
-        // Panggil metode atau fungsi yang ingin dijalankan
-        controller.playSong(data[index + 1].uri, index + 1);
-        controller.showLyric(data[index].data);
-      } else if (newValue == controller.max.value && (index + 1) > (data.length - 1)) {
-        log('123456789000');
-        controller.stopSongPlayer();
-        if (subscription != null) {
-          subscription!.cancel();
-        }
-      }
-    });
-  }
+  List noData = ['No Data Found'];
+  // void autoNextPlay(int index, PlayerController controller, List<SongModel> finalData) {
+  //   subscription = controller.value.listen((newValue) {
+  //     'log(cek max value : ${controller.max.value})';
+  //     if (newValue >= controller.max.value && (index) < (finalData.length - 1)) {
+  //       log('cek max value : ${controller.max.value}');
+  //       // Panggil metode atau fungsi yang ingin dijalankan
+  //       controller.playSong(finalData[index + 1].uri, index + 1);
+  //       controller.showLyric(finalData[index].data);
+  //     } else if (newValue == controller.max.value && (index + 1) > (finalData.length - 1)) {
+  //       log('123456789000');
+  //       controller.stopSongPlayer();
+  //       if (subscription != null) {
+  //         subscription!.cancel();
+  //       }
+  //     }
+  //   });
+  // }
 
   // controller.value.listen((newValue) {
   //     if (newValue == controller.max.value && (controller.playIndex.value) < (data.length - 1)) {
@@ -47,8 +48,9 @@ class ListMusic extends StatelessWidget {
   Widget build(BuildContext context) {
     log('Periksa data length atas : ${data.length}');
     var controller = Get.find<PlayerController>();
-    controller.listMusics.value = data;
-    log('cek listMusics length : ${controller.listMusics.value}');
+    log('sedang di test di tap gesture : ${controller.foundMusic.value}');
+    // controller.listMusics.value = data;
+    // log('cek listMusics length : ${controller.listMusics.value}');
     // final searchController = TextEditingController();
     // controller.value.listen((newValue) {
     //   if (newValue == controller.max.value && (controller.playIndex.value) < (data.length - 1) && controller.isPlaying.value) {
@@ -64,86 +66,108 @@ class ListMusic extends StatelessWidget {
     //     controller.stopSongPlayer();
     //   }
     // });
+
     log('cek playIndex 0 : ${controller.playIndex.value}');
 
-    return Scaffold(
-        backgroundColor: bgDarkColor,
-        appBar: AppBar(
+    return WillPopScope(
+      onWillPop: () async {
+        if (subscription != null) {
+          subscription!.cancel();
+        }
+        if (controller.isPlaying.value) {
+          controller.stopSongPlayer();
+          return true;
+        } else {
+          controller.stopSongPlayer();
+          return true;
+        }
+      },
+      child: Scaffold(
           backgroundColor: bgDarkColor,
-          // actions: [],
-          leading: const Icon(
-            Icons.sort_rounded,
-            color: whiteColor,
-          ),
-          title: Text(
-            'List Musics',
-            style: ourStyle(
-              size: 18,
-            ),
-          ),
-        ),
-        body: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: bgColor),
-              child: TextField(
-                onSubmitted: (value) => controller.runFilter(value),
-                style: const TextStyle(color: whiteColor),
-                // onChanged: (value) => _runFilter(value),
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.only(left: 10),
-                  labelText: 'Search',
-                  suffixIcon: Icon(Icons.search, color: whiteColor),
-                ),
+          appBar: AppBar(
+            backgroundColor: bgDarkColor,
+            // actions: [],
+            leading: GestureDetector(
+              onTap: () {
+                log('sedang di test di tap gesture');
+                controller.isTitleSortAscending();
+                controller.sortTitleList(controller.isTitleAscending.value);
+                // controller.stopSongPlayer();
+              },
+              child: const Icon(
+                Icons.sort_rounded,
+                color: whiteColor,
               ),
             ),
-            SizedBox(height: 20),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                margin: const EdgeInsets.only(bottom: 4),
-                child: Obx(
-                  () => ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: controller.foundMusic.value.isNotEmpty ? controller.foundMusic.value.length : data.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            ListTile(
-                                // shape: RoundedRectangleBorder(
-                                //   borderRadius: BorderRadius.circular(12),
-                                // ),
-                                tileColor: bgColor,
-                                title: Text(
-                                  controller.foundMusic.value.isNotEmpty
-                                      ? controller.foundMusic.value[index].displayNameWOExt
-                                      : data[index].displayNameWOExt,
-                                  style: ourStyle(family: bold, size: 15),
-                                ),
-                                subtitle: Text(
-                                  (() {
-                                    List<SongModel> foundMusic = controller.foundMusic.value;
-                                    List<SongModel> allMusic = data;
+            title: Text(
+              'List Musics',
+              style: ourStyle(
+                size: 18,
+              ),
+            ),
+          ),
+          body: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: bgColor),
+                child: TextField(
+                  onSubmitted: (value) => controller.runFilterTitle(value),
+                  style: const TextStyle(color: whiteColor),
+                  // onChanged: (value) => _runFilter(value),
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.only(left: 10),
+                    labelText: 'Search',
+                    suffixIcon: Icon(Icons.search, color: whiteColor),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                  margin: const EdgeInsets.only(bottom: 4),
+                  child: Obx(() {
+                    // List finalData = controller.foundMusic.value.isNotEmpty ? controller.foundMusic.value : noData;
+                    List<SongModel> finalData = controller.foundMusic.value;
 
-                                    String artist =
-                                        foundMusic.isNotEmpty ? foundMusic[index].artist ?? '<unknown>' : allMusic[index].artist ?? '<unknown>';
+                    return ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: finalData.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        // List<SongModel> finalData = controller.foundMusic.value;
+                        controller.searchNewPlayIndex();
+                        log('sedang ditest finalData : ${finalData.length}');
 
-                                    return artist == '<unknown>' ? 'Unknown Artist' : artist;
-                                  })(),
-                                ),
-                                leading: QueryArtworkWidget(
-                                  id: controller.foundMusic.value.isNotEmpty ? controller.foundMusic.value[index].id : data[index].id,
-                                  type: ArtworkType.AUDIO,
-                                  nullArtworkWidget: const Icon(
-                                    Icons.music_note,
-                                    color: whiteColor,
-                                    size: 32,
-                                  ),
-                                ),
-                                trailing:
-                                    controller.playIndex.value == index && controller.isPlaying.value && data[index].uri == controller.playUri.value
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: [
+                              Obx(
+                                () => ListTile(
+                                    // shape: RoundedRectangleBorder(
+                                    //   borderRadius: BorderRadius.circular(12),
+                                    // ),
+                                    tileColor: bgColor,
+                                    title: Text(
+                                      finalData[index].displayNameWOExt,
+                                      style: ourStyle(family: bold, size: 15),
+                                    ),
+                                    subtitle: Text(
+                                      finalData[index].artist ?? '<unknown>',
+                                      style: ourStyle(family: regular, size: 12),
+                                    ),
+                                    leading: QueryArtworkWidget(
+                                      id: finalData[index].id,
+                                      type: ArtworkType.AUDIO,
+                                      nullArtworkWidget: const Icon(
+                                        Icons.music_note,
+                                        color: whiteColor,
+                                        size: 32,
+                                      ),
+                                    ),
+                                    trailing: controller.playIndex.value == index &&
+                                            controller.isPlaying.value &&
+                                            finalData[index].uri == controller.playUri.value
                                         ? const Icon(
                                             Icons.stop,
                                             size: 26,
@@ -154,53 +178,63 @@ class ListMusic extends StatelessWidget {
                                             size: 26,
                                             color: whiteColor,
                                           ),
-                                onTap: () {
-                                  if (controller.playIndex.value == index &&
-                                      controller.isPlaying.value &&
-                                      data[index].uri == controller.playUri.value) {
-                                    controller.stopSongPlayer();
-                                    if (subscription != null) {
-                                      subscription!.cancel();
-                                    }
-                                  } else {
-                                    controller.playSong(
-                                      data[index].uri,
-                                      index,
-                                    );
-                                    autoNextPlay(index, controller);
-                                    controller.showLyric(data[index].data);
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(const SnackBar(content: Text('Long press the button to access the music player.')));
-                                  }
-                                  log('datanya : ${data[index].data}');
-                                },
-                                onLongPress: () {
-                                  Get.to(
-                                    () => Player(
-                                      data: data,
-                                    ),
-                                    transition: Transition.downToUp,
-                                  );
-                                  if (controller.playIndex.value == index && controller.isPlaying.value) {
-                                    controller.pauseSong();
-                                  } else {
-                                    controller.playSong(
-                                      data[index].uri,
-                                      index,
-                                    );
-                                    log('cek playIndex 1 : $index');
-                                    controller.showLyric(data[index].data);
-                                  }
-                                }),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                                    onTap: () {
+                                      if (controller.playIndex.value == index &&
+                                          controller.isPlaying.value &&
+                                          finalData[index].uri == controller.playUri.value) {
+                                        controller.stopSongPlayer();
+                                        if (subscription != null) {
+                                          subscription!.cancel();
+                                        }
+                                      } else {
+                                        log('Uri onTap : ${finalData[index]}');
+                                        controller.playSong(
+                                          finalData[index].uri,
+                                          index,
+                                        );
+                                        subscription = controller.autoNextPlay(index, controller, finalData);
+                                        controller.showLyric(finalData[index].data);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(content: Text('Long press the button to access the music player.')));
+                                      }
+                                      log('datanya : ${finalData[index].uri}');
+                                    },
+                                    onLongPress: () {
+                                      if (subscription != null) {
+                                        subscription!.cancel();
+                                      }
+
+                                      Get.to(
+                                        () => Player(
+                                          data: finalData,
+                                        ),
+                                        transition: Transition.downToUp,
+                                      );
+                                      if (controller.playIndex.value == index &&
+                                          controller.isPlaying.value &&
+                                          finalData[index].uri == controller.playUri.value) {
+                                        controller.pauseSong();
+                                      } else {
+                                        log('Uri onLongPress : ${finalData[index].uri}');
+                                        controller.playSong(
+                                          finalData[index].uri,
+                                          index,
+                                        );
+                                        log('cek playIndex 1 : $index');
+                                        controller.showLyric(finalData[index].data);
+                                      }
+                                    }),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }),
                 ),
               ),
-            ),
-          ],
-        ));
+            ],
+          )),
+    );
   }
 }

@@ -13,6 +13,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../models/folder_model.dart';
+
 class PlayerController extends GetxController {
   final audioQuery = OnAudioQuery();
   final audioPlayer = AudioPlayer();
@@ -23,6 +25,9 @@ class PlayerController extends GetxController {
   RxList<String> directories = <String>[].obs;
   RxList<SongModel> listMusics = <SongModel>[].obs;
   RxList<SongModel> foundMusic = <SongModel>[].obs;
+  RxList<FolderData> foundFolder = <FolderData>[].obs;
+  RxList<FolderData> listFolder = <FolderData>[].obs;
+  RxList<String> idIndex = <String>[].obs;
   var lyricModel = LyricsModelBuilder.create().bindLyricToMain('').getModel().obs;
   // StreamController<String> controllerStream = StreamController<String>();
   // late StreamSubscription<String> subscription;
@@ -40,7 +45,9 @@ class PlayerController extends GetxController {
   var isStop = false.obs;
   var isLyricStream = true.obs;
   var playProgress = 0.obs;
-
+  var isTitleAscending = true.obs;
+  var isFolderAscending = true.obs;
+  var isListToPlayer = true.obs;
   var duration = ''.obs;
   var position = ''.obs;
 
@@ -51,6 +58,8 @@ class PlayerController extends GetxController {
   void onInit() {
     super.onInit();
     checkPermission();
+
+    // foundMusic = listMusics; // membuat referensi, saling terhubung
     // subscription = controllerStream.stream.listen((data) {
     //   // Callback yang akan dijalankan saat data diterima
     //   // Di sini, kita hanya mencetak data ke konsol
@@ -101,7 +110,7 @@ class PlayerController extends GetxController {
   //   playIndex.value = index;
   // }
 
-  playSong(String? uri, index) {
+  playSong(String? uri, index) async {
     playIndex.value = index;
     playUri.value = uri!;
     log('uri: $uri');
@@ -111,15 +120,15 @@ class PlayerController extends GetxController {
           Uri.parse(playUri.value),
         ),
       );
-      audioPlayer.play();
+      max.value = foundMusic[index].duration!.toDouble();
+      updatePosition();
       isStop(false);
       isPause(false);
       isLyricStream(true);
       isPlaying(true);
-
-      updatePosition();
+      await audioPlayer.play();
     } on Exception catch (e) {
-      debugPrint(e.toString());
+      debugPrint('error playSong: ${e.toString()}');
     }
   }
 
@@ -168,7 +177,6 @@ class PlayerController extends GetxController {
 
   stopSongPlayer() async {
     try {
-      await audioPlayer.stop();
       audioPlayer.dispose;
 
       isStop(true);
@@ -177,6 +185,7 @@ class PlayerController extends GetxController {
       changeDurationToMilliseconds(0);
 
       updatePosition();
+      await audioPlayer.stop();
     } on Exception catch (e) {
       debugPrint(e.toString());
     }
@@ -245,8 +254,8 @@ class PlayerController extends GetxController {
       if (!groupedFiles.containsKey(folderName)) {
         groupedFiles[folderName] = [];
       }
-      if (!directories.value.contains(directory)) {
-        directories.value.add(directory);
+      if (!directories.contains(directory)) {
+        directories.add(directory);
       }
       groupedFiles[folderName]!.add(queriedSong);
     }
@@ -380,14 +389,15 @@ $songLyric
     }
   }
 
-  void runFilter(String enteredKeyword) {
+  void runFilterTitle(String enteredKeyword) {
     List<SongModel> results = [];
     log('cek listMusicssss : ${listMusics.value}');
     if (enteredKeyword.isEmpty) {
       // if the search field is empty or only contains white-space, we'll display all users
-      results = listMusics.value;
+      results = List.from(listMusics.value);
     } else {
-      results = listMusics.value.where((listMusic) => listMusic.displayNameWOExt.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      results = listMusics.where((listMusic) => listMusic.displayNameWOExt.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      log('cek listMusicssss 12345 : ${listMusics.value}');
       // we use the toLowerCase() method to make it case-insensitive
     }
 
@@ -397,6 +407,108 @@ $songLyric
     log('cek results : $results');
     log('cek entered keyword : $enteredKeyword');
     log('cek foundMusic : ${foundMusic.value}');
+  }
+
+  void runFilterFolder(String enteredKeyword) {
+    List<FolderData> results = [];
+    if (enteredKeyword.isEmpty) {
+      // if the search field is empty or only contains white-space, we'll display all users
+      results = List.from(listFolder.value);
+    } else {
+      results = listFolder.where((listFolder) => listFolder.folderName.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+    }
+    foundFolder.value = results;
+  }
+
+  sortTitleList(bool isAscending) {
+    foundMusic.value.sort((a, b) {
+      if (isAscending) {
+        // foundMusic.value = foundMusic.toList();
+        log('sedang ditest isAscending ${foundMusic.value}');
+        return a.displayNameWOExt.compareTo(b.displayNameWOExt);
+      } else {
+        // foundMusic.value = foundMusic.toList();
+        log('sedang ditest isDescending ${foundMusic.value}');
+        return b.displayNameWOExt.compareTo(a.displayNameWOExt);
+      }
+    });
+    foundMusic.value = foundMusic.toList();
+    log('sedang ditest isFinal ${foundMusic.value}');
+  }
+
+  sortFolderList(bool isAscending) {
+    foundFolder.value.sort((a, b) {
+      if (isAscending) {
+        // foundMusic.value = foundMusic.toList();
+        log('sedang ditest isAscending ${foundFolder.value}');
+        return a.folderName.compareTo(b.folderName);
+      } else {
+        // foundMusic.value = foundMusic.toList();
+        log('sedang ditest isDescending ${foundFolder.value}');
+        return b.folderName.compareTo(a.folderName);
+      }
+    });
+    foundFolder.value = foundFolder.toList();
+    log('sedang ditest isFinal ${foundFolder.value}');
+  }
+
+  isTitleSortAscending() {
+    isTitleAscending.value = !isTitleAscending.value;
+  }
+
+  isFolderSortAscending() {
+    isFolderAscending.value = !isFolderAscending.value;
+  }
+
+//   addListFoundFolder(Map<String, String> data) {
+//   var folderData = FolderData(
+//     folderName: data['folderName'] ?? '',
+//     directoryName: data['directoryName'] ?? '',
+//   );
+//   listFolder.add(folderData);
+//   foundFolder.add(folderData);
+// }
+
+  addListFolderModel(String folderName, String directoryName) {
+    var folderData = FolderData(
+      folderName: folderName,
+      directoryName: directoryName,
+    );
+    listFolder.add(folderData);
+    foundFolder.add(folderData);
+  }
+
+  searchNewPlayIndex() {
+    int newPlayIndex;
+    String searchedIndex = playUri.value;
+    newPlayIndex = foundMusic.indexWhere((data) => data.uri == searchedIndex);
+    playIndex.value = newPlayIndex == -1 ? playIndex.value : newPlayIndex;
+    log('cek new play index : ${playIndex.value}');
+  }
+
+  StreamSubscription? autoNextPlay(int index, PlayerController controller, List<SongModel> finalData) {
+    StreamSubscription? subscription;
+    subscription = controller.value.listen((newValue) {
+      'log(cek max value : ${controller.max.value})';
+      if (newValue >= controller.max.value && (index) < (finalData.length - 1)) {
+        log('cek max value : ${controller.max.value}');
+        // Panggil metode atau fungsi yang ingin dijalankan
+        controller.playSong(finalData[index + 1].uri, index + 1);
+        controller.showLyric(finalData[index].data);
+      } else if (newValue >= controller.max.value && (index + 1) > (finalData.length - 1)) {
+        controller.stopSongPlayer();
+        if (subscription != null) {
+          subscription.cancel();
+        }
+      } else if (newValue >= controller.max.value) {
+        controller.stopSongPlayer();
+        if (subscription != null) {
+          subscription.cancel();
+        }
+      }
+    });
+    return subscription;
   }
 }
    // Lakukan sesuatu dengan data lagu, misalnya:

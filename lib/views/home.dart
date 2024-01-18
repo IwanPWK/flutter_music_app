@@ -25,7 +25,18 @@ class Home extends StatelessWidget {
           actions: [
             IconButton(onPressed: () {}, icon: const Icon(Icons.search, color: whiteColor)),
           ],
-          leading: const Icon(Icons.sort_rounded, color: whiteColor),
+          leading: GestureDetector(
+            onTap: () {
+              // log('sedang di test di tap gesture');
+              // controller.isTitleSortAscending();
+              // controller.sortTitleList(controller.isAscending.value);
+              // controller.stopSongPlayer();
+            },
+            child: const Icon(
+              Icons.sort_rounded,
+              color: whiteColor,
+            ),
+          ),
           title: Text(
             'I\'Wan Music',
             style: ourStyle(
@@ -52,11 +63,15 @@ class Home extends StatelessWidget {
                 log("cek snapshot : ${snapshot.data}");
                 return ListView.builder(
                     physics: const BouncingScrollPhysics(),
-                    itemCount: snapshot.data!.length,
+                    itemCount: snapshot.data!.keys.length,
                     itemBuilder: (BuildContext context, int index) {
-                      String folderName = snapshot.data!.keys.elementAt(index);
+                      String folder = snapshot.data!.keys.elementAt(index);
                       String directory = controller.directories[index];
+                      controller.addListFolderModel(folder, directory);
                       // List<SongModel> files = controller.groupedFiles[folderName]!;
+
+                      String folderName = controller.foundFolder[index].folderName;
+                      String directoryName = controller.foundFolder[index].directoryName;
                       log('cek snapshot datasss : ${snapshot.data![folderName]!}');
 
                       return Container(
@@ -71,7 +86,7 @@ class Home extends StatelessWidget {
                                   style: ourStyle(family: bold, size: 14),
                                 ),
                                 subtitle: Text(
-                                  directory,
+                                  directoryName,
                                   style: ourStyle(family: regular, size: 10),
                                 ),
                                 leading: const Icon(
@@ -79,8 +94,10 @@ class Home extends StatelessWidget {
                                   size: 60,
                                 ),
                                 onTap: () {
+                                  controller.listMusics.value = snapshot.data![folderName]!;
+                                  controller.foundMusic.value = snapshot.data![folderName]!;
                                   Get.to(
-                                    ListMusic(
+                                    () => ListMusic(
                                       data: snapshot.data![folderName]!,
                                     ),
                                     transition: Transition.downToUp,
