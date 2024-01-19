@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_music_app/views/list.dart';
 import 'package:get/get.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import '../consts/colors.dart';
 import '../consts/text_style.dart';
 import '../controllers/player_controller.dart';
@@ -22,14 +23,11 @@ class Home extends StatelessWidget {
         backgroundColor: bgDarkColor,
         appBar: AppBar(
           backgroundColor: bgDarkColor,
-          actions: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.search, color: whiteColor)),
-          ],
           leading: GestureDetector(
             onTap: () {
-              // log('sedang di test di tap gesture');
-              // controller.isTitleSortAscending();
-              // controller.sortTitleList(controller.isAscending.value);
+              log('sedang di test di tap gesture');
+              controller.isFolderSortAscending();
+              controller.sortFolderList(controller.isFolderAscending.value);
               // controller.stopSongPlayer();
             },
             child: const Icon(
@@ -45,71 +43,101 @@ class Home extends StatelessWidget {
             ),
           ),
         ),
-        body: FutureBuilder(
-            future: controller.queryAndSaveSongs(),
-            builder: (BuildContext context, snapshot) {
-              if (snapshot.data == null) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else if (snapshot.data!.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No Songs Found',
-                    style: ourStyle(family: bold, size: 14),
-                  ),
-                );
-              } else {
-                log("cek snapshot : ${snapshot.data}");
-                return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: snapshot.data!.keys.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      String folder = snapshot.data!.keys.elementAt(index);
-                      String directory = controller.directories[index];
-                      controller.addListFolderModel(folder, directory);
-                      // List<SongModel> files = controller.groupedFiles[folderName]!;
+        body: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: bgColor),
+              child: TextField(
+                onSubmitted: (value) => controller.runFilterGroupedFiles(value),
+                style: const TextStyle(color: whiteColor),
+                // onChanged: (value) => _runFilter(value),
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.only(left: 10),
+                  labelText: 'Search',
+                  suffixIcon: Icon(Icons.search, color: whiteColor),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: FutureBuilder(
+                  future: controller.queryAndSaveSongs(),
+                  builder: (BuildContext context, snapshot) {
+                    if (snapshot.data == null) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else if (snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No Songs Found',
+                          style: ourStyle(family: bold, size: 14),
+                        ),
+                      );
+                    } else {
+                      log("cek snapshot : ${snapshot.data}");
+                      return Obx(() {
+                        // snapshot.data!.keys.length,
+                        Map<String, List<SongModel>> finalFolderData = controller.foundGroupedFiles;
 
-                      String folderName = controller.foundFolder[index].folderName;
-                      String directoryName = controller.foundFolder[index].directoryName;
-                      log('cek snapshot datasss : ${snapshot.data![folderName]!}');
+                        return ListView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: finalFolderData.keys.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              String folderName = finalFolderData.keys.elementAt(index);
+                              String pathDirectoryRaw = finalFolderData[folderName]![0].data;
+                              String pathDirectoryName = controller.getDirectory(pathDirectoryRaw);
+                              log('isi  folder Name: $folderName');
+                              // String directoryName = controller.directories[index];
+                              // controller.addListFolderModel(folder, directory);
+                              // List<SongModel> files = controller.groupedFiles[folderName]!;
 
-                      return Container(
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                          margin: const EdgeInsets.only(bottom: 2),
-                          child: Column(
-                            children: [
-                              ListTile(
-                                tileColor: bgColor,
-                                title: Text(
-                                  folderName,
-                                  style: ourStyle(family: bold, size: 14),
-                                ),
-                                subtitle: Text(
-                                  directoryName,
-                                  style: ourStyle(family: regular, size: 10),
-                                ),
-                                leading: const Icon(
-                                  Icons.folder,
-                                  size: 60,
-                                ),
-                                onTap: () {
-                                  controller.listMusics.value = snapshot.data![folderName]!;
-                                  controller.foundMusic.value = snapshot.data![folderName]!;
-                                  Get.to(
-                                    () => ListMusic(
-                                      data: snapshot.data![folderName]!,
-                                    ),
-                                    transition: Transition.downToUp,
-                                  );
-                                  log('cek snapshot data : ${snapshot.data![folderName]!}');
-                                },
-                              ),
-                            ],
-                          ));
-                    });
-              }
-            }));
+                              // String folderName = controller.foundFolder[index].folderName;
+                              // String directoryName = controller.foundFolder[index].directoryName;
+                              log('cek snapshot datasss : ${snapshot.data![folderName]!}');
+
+                              return Container(
+                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                                  margin: const EdgeInsets.only(bottom: 2),
+                                  child: Column(
+                                    children: [
+                                      Obx(
+                                        () => ListTile(
+                                          tileColor: bgColor,
+                                          title: Text(
+                                            folderName,
+                                            style: ourStyle(family: bold, size: 14),
+                                          ),
+                                          subtitle: Text(
+                                            pathDirectoryName,
+                                            style: ourStyle(family: regular, size: 10),
+                                          ),
+                                          leading: Icon(
+                                            controller.isFolderAscending.value ? Icons.folder : Icons.folder,
+                                            size: 60,
+                                          ),
+                                          onTap: () {
+                                            controller.listMusics.value = finalFolderData[folderName]!;
+                                            controller.foundMusic.value = finalFolderData[folderName]!;
+                                            Get.to(
+                                              () => ListMusic(
+                                                data: finalFolderData[folderName]!,
+                                              ),
+                                              transition: Transition.downToUp,
+                                            );
+                                            log('cek snapshot data : ${snapshot.data![folderName]!}');
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ));
+                            });
+                      });
+                    }
+                  }),
+            ),
+          ],
+        ));
 
     // ListView.builder(
     //     itemCount: controller.groupedFiles.length,

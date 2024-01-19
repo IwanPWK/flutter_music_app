@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
 
@@ -22,10 +23,11 @@ class PlayerController extends GetxController {
   RxList<String> filePaths = <String>[].obs;
   RxSet<String> folders = <String>{}.obs;
   RxMap<String, List<SongModel>> groupedFiles = <String, List<SongModel>>{}.obs;
+  RxMap<String, List<SongModel>> foundGroupedFiles = <String, List<SongModel>>{}.obs;
   RxList<String> directories = <String>[].obs;
   RxList<SongModel> listMusics = <SongModel>[].obs;
   RxList<SongModel> foundMusic = <SongModel>[].obs;
-  RxList<FolderData> foundFolder = <FolderData>[].obs;
+  // RxList<FolderData> foundFolder = <FolderData>[].obs;
   RxList<FolderData> listFolder = <FolderData>[].obs;
   RxList<String> idIndex = <String>[].obs;
   var lyricModel = LyricsModelBuilder.create().bindLyricToMain('').getModel().obs;
@@ -243,7 +245,7 @@ class PlayerController extends GetxController {
     // num++;
     // Simpan hasil query ke dalam List songs
     songs.value = queriedSongs;
-    log('cek songsssssssssss: ${queriedSongs}');
+    // log('cek songsssssssssss: ${queriedSongs}');
     // log('Jumlah $num');
 
     for (int index = 0; index < queriedSongs.length; index++) {
@@ -254,14 +256,18 @@ class PlayerController extends GetxController {
       if (!groupedFiles.containsKey(folderName)) {
         groupedFiles[folderName] = [];
       }
+      if (!foundGroupedFiles.containsKey(folderName)) {
+        foundGroupedFiles[folderName] = [];
+      }
       if (!directories.contains(directory)) {
         directories.add(directory);
       }
       groupedFiles[folderName]!.add(queriedSong);
+      foundGroupedFiles[folderName]!.add(queriedSong);
     }
 
-    log('periksa directories: ${directories.value}');
-    log('Folders Name: ${groupedFiles['listen']}');
+    // log('periksa directories: ${directories.value}');
+    // log('Folders Name: ${groupedFiles['listen']}');
     return groupedFiles;
   }
 
@@ -409,20 +415,20 @@ $songLyric
     log('cek foundMusic : ${foundMusic.value}');
   }
 
-  void runFilterFolder(String enteredKeyword) {
-    List<FolderData> results = [];
+  void runFilterGroupedFiles(String enteredKeyword) {
+    Map<String, List<SongModel>> results = {};
     if (enteredKeyword.isEmpty) {
       // if the search field is empty or only contains white-space, we'll display all users
-      results = List.from(listFolder.value);
+      results = Map.from(groupedFiles);
     } else {
-      results = listFolder.where((listFolder) => listFolder.folderName.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      results = Map.fromEntries(groupedFiles.entries.where((entry) => entry.key.toLowerCase().contains(enteredKeyword.toLowerCase())));
       // we use the toLowerCase() method to make it case-insensitive
     }
-    foundFolder.value = results;
+    foundGroupedFiles.value = results;
   }
 
   sortTitleList(bool isAscending) {
-    foundMusic.value.sort((a, b) {
+    foundMusic.sort((a, b) {
       if (isAscending) {
         // foundMusic.value = foundMusic.toList();
         log('sedang ditest isAscending ${foundMusic.value}');
@@ -438,19 +444,18 @@ $songLyric
   }
 
   sortFolderList(bool isAscending) {
-    foundFolder.value.sort((a, b) {
-      if (isAscending) {
-        // foundMusic.value = foundMusic.toList();
-        log('sedang ditest isAscending ${foundFolder.value}');
-        return a.folderName.compareTo(b.folderName);
-      } else {
-        // foundMusic.value = foundMusic.toList();
-        log('sedang ditest isDescending ${foundFolder.value}');
-        return b.folderName.compareTo(a.folderName);
-      }
+    Map<String, List<SongModel>> results;
+
+    results = SplayTreeMap<String, List<SongModel>>.from(foundGroupedFiles, (a, b) {
+      final aLower = a.toLowerCase();
+      final bLower = b.toLowerCase();
+      return isAscending ? aLower.compareTo(bLower) : bLower.compareTo(aLower);
     });
-    foundFolder.value = foundFolder.toList();
-    log('sedang ditest isFinal ${foundFolder.value}');
+
+    log('cek results sort folder : ${results.keys.elementAt(0)}, ${results.keys.elementAt(1)}, ${results.keys.elementAt(2)}, ${results.keys.elementAt(3)}');
+    log('cek nilai results : $results');
+    foundGroupedFiles.clear();
+    foundGroupedFiles.addAll(RxMap<String, List<SongModel>>.from(results));
   }
 
   isTitleSortAscending() {
@@ -470,14 +475,14 @@ $songLyric
 //   foundFolder.add(folderData);
 // }
 
-  addListFolderModel(String folderName, String directoryName) {
-    var folderData = FolderData(
-      folderName: folderName,
-      directoryName: directoryName,
-    );
-    listFolder.add(folderData);
-    foundFolder.add(folderData);
-  }
+  // addListFolderModel(String folderName, String directoryName) {
+  //   var folderData = FolderData(
+  //     folderName: folderName,
+  //     directoryName: directoryName,
+  //   );
+  //   listFolder.add(folderData);
+  //   foundFolder.add(folderData);
+  // }
 
   searchNewPlayIndex() {
     int newPlayIndex;
