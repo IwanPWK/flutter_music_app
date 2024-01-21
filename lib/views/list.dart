@@ -8,13 +8,15 @@ import 'package:on_audio_query/on_audio_query.dart';
 import '../consts/colors.dart';
 import '../consts/text_style.dart';
 import '../controllers/player_controller.dart';
+import '../models/audio_model.dart';
 import 'player.dart';
 
 class ListMusic extends StatelessWidget {
-  final List<SongModel> data;
-  StreamSubscription? subscription;
+  final List<AudioModel> data;
+  final String folderName;
+  StreamSubscription<double>? subscription;
 
-  ListMusic({super.key, required this.data});
+  ListMusic({super.key, required this.data, required this.folderName});
   List noData = ['No Data Found'];
   // void autoNextPlay(int index, PlayerController controller, List<SongModel> finalData) {
   //   subscription = controller.value.listen((newValue) {
@@ -92,7 +94,7 @@ class ListMusic extends StatelessWidget {
                 log('sedang di test di tap gesture');
                 controller.isTitleSortAscending();
                 controller.sortTitleList(controller.isTitleAscending.value);
-                // controller.stopSongPlayer();
+                controller.stopSongPlayer();
               },
               child: const Icon(
                 Icons.sort_rounded,
@@ -100,7 +102,7 @@ class ListMusic extends StatelessWidget {
               ),
             ),
             title: Text(
-              'List Musics',
+              '$folderName folder',
               style: ourStyle(
                 size: 18,
               ),
@@ -128,7 +130,7 @@ class ListMusic extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 4),
                   child: Obx(() {
                     // List finalData = controller.foundMusic.value.isNotEmpty ? controller.foundMusic.value : noData;
-                    List<SongModel> finalData = controller.foundMusic.value;
+                    List<AudioModel> finalData = controller.foundMusic.value;
 
                     return ListView.builder(
                       physics: const BouncingScrollPhysics(),
@@ -144,20 +146,17 @@ class ListMusic extends StatelessWidget {
                             children: [
                               Obx(
                                 () => ListTile(
-                                    // shape: RoundedRectangleBorder(
-                                    //   borderRadius: BorderRadius.circular(12),
-                                    // ),
                                     tileColor: bgColor,
                                     title: Text(
-                                      finalData[index].displayNameWOExt,
+                                      finalData[index].title!,
                                       style: ourStyle(family: bold, size: 15),
                                     ),
                                     subtitle: Text(
-                                      finalData[index].artist ?? '<unknown>',
+                                      finalData[index].artist == '<unknown>' ? 'No Data' : finalData[index].artist!,
                                       style: ourStyle(family: regular, size: 12),
                                     ),
                                     leading: QueryArtworkWidget(
-                                      id: finalData[index].id,
+                                      id: finalData[index].id!,
                                       type: ArtworkType.AUDIO,
                                       nullArtworkWidget: const Icon(
                                         Icons.music_note,
@@ -187,13 +186,14 @@ class ListMusic extends StatelessWidget {
                                           subscription!.cancel();
                                         }
                                       } else {
-                                        log('Uri onTap : ${finalData[index]}');
+                                        log('cek finalData : ${finalData.length}');
+                                        log('cek index : $index');
                                         controller.playSong(
                                           finalData[index].uri,
                                           index,
                                         );
-                                        subscription = controller.autoNextPlay(index, controller, finalData);
-                                        controller.showLyric(finalData[index].data);
+                                        subscription = controller.autoNextPlay(controller, finalData);
+                                        controller.showLyric(finalData[index].audioPath);
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(const SnackBar(content: Text('Long press the button to access the music player.')));
                                       }
@@ -221,7 +221,8 @@ class ListMusic extends StatelessWidget {
                                           index,
                                         );
                                         log('cek playIndex 1 : $index');
-                                        controller.showLyric(finalData[index].data);
+                                        controller.isListToPlayer(true);
+                                        controller.showLyric(finalData[controller.playIndex.value].audioPath);
                                       }
                                     }),
                               ),

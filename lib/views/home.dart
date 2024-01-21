@@ -7,6 +7,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import '../consts/colors.dart';
 import '../consts/text_style.dart';
 import '../controllers/player_controller.dart';
+import '../models/audio_model.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -36,7 +37,7 @@ class Home extends StatelessWidget {
             ),
           ),
           title: Text(
-            'I\'Wan Music',
+            'I\'Wan Audio Player',
             style: ourStyle(
               family: bold,
               size: 18,
@@ -78,22 +79,15 @@ class Home extends StatelessWidget {
                       log("cek snapshot : ${snapshot.data}");
                       return Obx(() {
                         // snapshot.data!.keys.length,
-                        Map<String, List<SongModel>> finalFolderData = controller.foundGroupedFiles;
+                        Map<String, List<AudioModel>> finalFolderData = controller.foundGroupedFiles;
 
                         return ListView.builder(
                             physics: const BouncingScrollPhysics(),
                             itemCount: finalFolderData.keys.length,
                             itemBuilder: (BuildContext context, int index) {
                               String folderName = finalFolderData.keys.elementAt(index);
-                              String pathDirectoryRaw = finalFolderData[folderName]![0].data;
-                              String pathDirectoryName = controller.getDirectory(pathDirectoryRaw);
+                              String pathDirectoryName = finalFolderData[folderName]![0].directoryPath!;
                               log('isi  folder Name: $folderName');
-                              // String directoryName = controller.directories[index];
-                              // controller.addListFolderModel(folder, directory);
-                              // List<SongModel> files = controller.groupedFiles[folderName]!;
-
-                              // String folderName = controller.foundFolder[index].folderName;
-                              // String directoryName = controller.foundFolder[index].directoryName;
                               log('cek snapshot datasss : ${snapshot.data![folderName]!}');
 
                               return Container(
@@ -122,6 +116,7 @@ class Home extends StatelessWidget {
                                             Get.to(
                                               () => ListMusic(
                                                 data: finalFolderData[folderName]!,
+                                                folderName: folderName,
                                               ),
                                               transition: Transition.downToUp,
                                             );

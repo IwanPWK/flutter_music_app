@@ -11,22 +11,24 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lrc/lrc.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path/path.dart' as path;
-import 'package:flutter/services.dart' show rootBundle;
+// import 'package:path/path.dart' as path;
+// import 'package:flutter/services.dart' show rootBundle;
 
+import '../helpers/path_helper.dart';
+import '../models/audio_model.dart';
 import '../models/folder_model.dart';
 
 class PlayerController extends GetxController {
   final audioQuery = OnAudioQuery();
   final audioPlayer = AudioPlayer();
-  RxList<SongModel> songs = <SongModel>[].obs;
+  RxList<AudioModel> songList = <AudioModel>[].obs;
   RxList<String> filePaths = <String>[].obs;
   RxSet<String> folders = <String>{}.obs;
-  RxMap<String, List<SongModel>> groupedFiles = <String, List<SongModel>>{}.obs;
-  RxMap<String, List<SongModel>> foundGroupedFiles = <String, List<SongModel>>{}.obs;
-  RxList<String> directories = <String>[].obs;
-  RxList<SongModel> listMusics = <SongModel>[].obs;
-  RxList<SongModel> foundMusic = <SongModel>[].obs;
+  RxMap<String, List<AudioModel>> groupedFiles = <String, List<AudioModel>>{}.obs;
+  RxMap<String, List<AudioModel>> foundGroupedFiles = <String, List<AudioModel>>{}.obs;
+  RxList<String> directoryPaths = <String>[].obs;
+  RxList<AudioModel> listMusics = <AudioModel>[].obs;
+  RxList<AudioModel> foundMusic = <AudioModel>[].obs;
   // RxList<FolderData> foundFolder = <FolderData>[].obs;
   RxList<FolderData> listFolder = <FolderData>[].obs;
   RxList<String> idIndex = <String>[].obs;
@@ -233,7 +235,8 @@ class PlayerController extends GetxController {
     audioPlayer.seek(duration);
   }
 
-  Future<Map<String, List<SongModel>>> queryAndSaveSongs() async {
+  Future<Map<String, List<AudioModel>>> queryAndSaveSongs() async {
+    // List<AudioModel> audioList = [];
     // Lakukan querySongs
 
     List<SongModel> queriedSongs = await audioQuery.querySongs(
@@ -242,45 +245,63 @@ class PlayerController extends GetxController {
       sortType: null,
       uriType: UriType.EXTERNAL,
     );
+
     // num++;
     // Simpan hasil query ke dalam List songs
-    songs.value = queriedSongs;
+    // songs.value = queriedSongs;
     // log('cek songsssssssssss: ${queriedSongs}');
     // log('Jumlah $num');
+    log("Cek queriedSongsss: ${queriedSongs[0].duration}");
+    songList.value = List.from(queriedSongs.map((data) => AudioModel.fromAudioQuery(data)));
+    log('cek cek cek cek');
+    // await Future.delayed(Duration.zero);
+    // log('Cek songList: $audioList');
 
-    for (int index = 0; index < queriedSongs.length; index++) {
-      var songData = queriedSongs[index].data;
-      var queriedSong = queriedSongs[index];
-      var directory = getDirectory(songData);
-      String folderName = getFolderName(songData);
+    for (AudioModel audioModel in songList.value) {
+      String folderName = getFolderName(audioModel.directoryPath!);
+      log('Cek folderName: $folderName');
       if (!groupedFiles.containsKey(folderName)) {
         groupedFiles[folderName] = [];
       }
       if (!foundGroupedFiles.containsKey(folderName)) {
         foundGroupedFiles[folderName] = [];
       }
-      if (!directories.contains(directory)) {
-        directories.add(directory);
-      }
-      groupedFiles[folderName]!.add(queriedSong);
-      foundGroupedFiles[folderName]!.add(queriedSong);
+      groupedFiles[folderName]!.add(audioModel);
+      foundGroupedFiles[folderName]!.add(audioModel);
     }
+    // for (int index = 0; index < queriedSongs.length; index++) {
+    //   var pathSong = queriedSongs[index].data;
+    //   var queriedSong = queriedSongs[index];
+    //   var directoryPath = getDirectory(pathSong);
+    //   String folderName = getFolderName(pathSong);
+    //   if (!groupedFiles.containsKey(folderName)) {
+    //     groupedFiles[folderName] = [];
+    //   }
+    //   if (!foundGroupedFiles.containsKey(folderName)) {
+    //     foundGroupedFiles[folderName] = [];
+    //   }
+    //   if (!directories.contains(directoryPath)) {
+    //     directories.add(directoryPath);
+    //   }
+    //   groupedFiles[folderName]!.add(queriedSong);
+    //   foundGroupedFiles[folderName]!.add(queriedSong);
+    // }
 
     // log('periksa directories: ${directories.value}');
     // log('Folders Name: ${groupedFiles['listen']}');
     return groupedFiles;
   }
 
-  String getFolderName(String filePath) {
-    String directory = getDirectory(filePath);
-    String folderName = path.basename(directory);
-    return folderName;
-  }
+  // String getFolderName(String filePath) {
+  //   String directory = getDirectory(filePath);
+  //   String folderName = path.basename(directory);
+  //   return folderName;
+  // }
 
-  String getDirectory(String filePath) {
-    String directory = path.dirname(filePath);
-    return directory;
-  }
+  // String getDirectory(String filePath) {
+  //   String directory = path.dirname(filePath);
+  //   return directory;
+  // }
 
   // getData() async {
   //   String response = await rootBundle.loadString('music_lyrics/lirik_musik.txt');
@@ -396,13 +417,13 @@ $songLyric
   }
 
   void runFilterTitle(String enteredKeyword) {
-    List<SongModel> results = [];
+    List<AudioModel> results = [];
     log('cek listMusicssss : ${listMusics.value}');
     if (enteredKeyword.isEmpty) {
       // if the search field is empty or only contains white-space, we'll display all users
       results = List.from(listMusics.value);
     } else {
-      results = listMusics.where((listMusic) => listMusic.displayNameWOExt.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      results = listMusics.where((listMusic) => listMusic.title!.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
       log('cek listMusicssss 12345 : ${listMusics.value}');
       // we use the toLowerCase() method to make it case-insensitive
     }
@@ -416,7 +437,7 @@ $songLyric
   }
 
   void runFilterGroupedFiles(String enteredKeyword) {
-    Map<String, List<SongModel>> results = {};
+    Map<String, List<AudioModel>> results = {};
     if (enteredKeyword.isEmpty) {
       // if the search field is empty or only contains white-space, we'll display all users
       results = Map.from(groupedFiles);
@@ -432,11 +453,11 @@ $songLyric
       if (isAscending) {
         // foundMusic.value = foundMusic.toList();
         log('sedang ditest isAscending ${foundMusic.value}');
-        return a.displayNameWOExt.compareTo(b.displayNameWOExt);
+        return a.title!.compareTo(b.title!);
       } else {
         // foundMusic.value = foundMusic.toList();
         log('sedang ditest isDescending ${foundMusic.value}');
-        return b.displayNameWOExt.compareTo(a.displayNameWOExt);
+        return b.title!.compareTo(a.title!);
       }
     });
     foundMusic.value = foundMusic.toList();
@@ -444,9 +465,9 @@ $songLyric
   }
 
   sortFolderList(bool isAscending) {
-    Map<String, List<SongModel>> results;
+    Map<String, List<AudioModel>> results;
 
-    results = SplayTreeMap<String, List<SongModel>>.from(foundGroupedFiles, (a, b) {
+    results = SplayTreeMap<String, List<AudioModel>>.from(foundGroupedFiles, (a, b) {
       final aLower = a.toLowerCase();
       final bLower = b.toLowerCase();
       return isAscending ? aLower.compareTo(bLower) : bLower.compareTo(aLower);
@@ -455,7 +476,7 @@ $songLyric
     log('cek results sort folder : ${results.keys.elementAt(0)}, ${results.keys.elementAt(1)}, ${results.keys.elementAt(2)}, ${results.keys.elementAt(3)}');
     log('cek nilai results : $results');
     foundGroupedFiles.clear();
-    foundGroupedFiles.addAll(RxMap<String, List<SongModel>>.from(results));
+    foundGroupedFiles.addAll(RxMap<String, List<AudioModel>>.from(results));
   }
 
   isTitleSortAscending() {
@@ -492,22 +513,33 @@ $songLyric
     log('cek new play index : ${playIndex.value}');
   }
 
-  StreamSubscription? autoNextPlay(int index, PlayerController controller, List<SongModel> finalData) {
-    StreamSubscription? subscription;
+  StreamSubscription<double>? autoNextPlay(PlayerController controller, List<AudioModel> finalData) {
+    StreamSubscription<double>? subscription;
     subscription = controller.value.listen((newValue) {
       'log(cek max value : ${controller.max.value})';
-      if (newValue >= controller.max.value && (index) < (finalData.length - 1)) {
-        log('cek max value : ${controller.max.value}');
+      if (newValue >= controller.max.value && (playIndex.value) < (finalData.length - 1)) {
+        // playIndex.value = index;
+        // log('cek max value : ${controller.max.value}');
+        log('pertama dijalankan');
         // Panggil metode atau fungsi yang ingin dijalankan
-        controller.playSong(finalData[index + 1].uri, index + 1);
-        controller.showLyric(finalData[index].data);
-      } else if (newValue >= controller.max.value && (index + 1) > (finalData.length - 1)) {
+        log('cek index di autoNextPlay 0: ${playIndex.value}');
+        playIndex.value += 1;
+        controller.playSong(finalData[playIndex.value].uri, playIndex.value);
+        log('cek index di autoNextPlay 1: ${playIndex.value}');
+        log('cek finalData.length di autoNextPlay : ${finalData.length}');
+        controller.showLyric(finalData[playIndex.value].audioPath);
+      } else if (newValue >= controller.max.value && (playIndex.value + 1) > (finalData.length - 1)) {
+        log('cek index di kedua autoNextPlay 0: ${playIndex.value}');
+        // playIndex.value += 1;
         controller.stopSongPlayer();
+        log('kedua dijalankan');
+        log('cek index di kedua autoNextPlay 1: ${playIndex.value}');
         if (subscription != null) {
           subscription.cancel();
         }
       } else if (newValue >= controller.max.value) {
         controller.stopSongPlayer();
+        log('ketiga dijalankan');
         if (subscription != null) {
           subscription.cancel();
         }
