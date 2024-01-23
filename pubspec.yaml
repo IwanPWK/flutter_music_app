@@ -43,6 +43,7 @@ dependencies:
   lrc: ^1.0.2
   flutter_lyric: ^2.0.4+6
   audioplayers: ^5.2.1
+  # google_mobile_ads: ^4.0.0
 
 dev_dependencies:
   flutter_test:

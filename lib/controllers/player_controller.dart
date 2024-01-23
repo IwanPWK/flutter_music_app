@@ -21,6 +21,7 @@ import '../models/folder_model.dart';
 class PlayerController extends GetxController {
   final audioQuery = OnAudioQuery();
   final audioPlayer = AudioPlayer();
+
   RxList<AudioModel> songList = <AudioModel>[].obs;
   RxList<String> filePaths = <String>[].obs;
   RxSet<String> folders = <String>{}.obs;
@@ -33,6 +34,9 @@ class PlayerController extends GetxController {
   RxList<FolderData> listFolder = <FolderData>[].obs;
   RxList<String> idIndex = <String>[].obs;
   var lyricModel = LyricsModelBuilder.create().bindLyricToMain('').getModel().obs;
+  RxList<dynamic> listFolderNames = [].obs;
+  // Rx<BannerAd?> testTipe =
+
   // StreamController<String> controllerStream = StreamController<String>();
   // late StreamSubscription<String> subscription;
 
@@ -61,7 +65,7 @@ class PlayerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    checkPermission();
+    // checkPermission();
 
     // foundMusic = listMusics; // membuat referensi, saling terhubung
     // subscription = controllerStream.stream.listen((data) {
@@ -76,38 +80,6 @@ class PlayerController extends GetxController {
     // subscription.cancel();
     // controllerStream.close(); // Jangan lupa menutup StreamController
     super.dispose();
-  }
-
-  checkPermission() async {
-    final deviceInfo = await DeviceInfoPlugin().androidInfo;
-    PermissionStatus perm;
-    PermissionStatus permAudio;
-    PermissionStatus permVideos;
-    PermissionStatus permImages;
-    PermissionStatus permExtStorage;
-    if (deviceInfo.version.sdkInt > 32) {
-      permAudio = await Permission.audio.request();
-      permVideos = await Permission.videos.request();
-      permImages = await Permission.photos.request();
-      permExtStorage = await Permission.manageExternalStorage.request();
-      log('nilai permAudio: ${permAudio.isGranted}');
-      log('nilai permVideos: ${permVideos.isGranted}');
-      log('nilai permImages: ${permImages.isGranted}');
-      log('nilai permExtStorage: ${permExtStorage.isGranted}');
-      if (!(permAudio.isGranted && permVideos.isGranted && permImages.isGranted && permExtStorage.isGranted)) {
-        checkPermission();
-      }
-    } else {
-      perm = await Permission.storage.request();
-      permAudio = await Permission.audio.request();
-      permVideos = await Permission.videos.request();
-      permImages = await Permission.photos.request();
-      permExtStorage = await Permission.manageExternalStorage.request();
-
-      if (!(perm.isGranted && permAudio.isGranted && permVideos.isGranted && permImages.isGranted && permExtStorage.isGranted)) {
-        checkPermission();
-      }
-    }
   }
 
   // updtPlayIndex(index) {
@@ -269,6 +241,7 @@ class PlayerController extends GetxController {
       groupedFiles[folderName]!.add(audioModel);
       foundGroupedFiles[folderName]!.add(audioModel);
     }
+    log('Cek groupedFiles: $groupedFiles');
     // for (int index = 0; index < queriedSongs.length; index++) {
     //   var pathSong = queriedSongs[index].data;
     //   var queriedSong = queriedSongs[index];
