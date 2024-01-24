@@ -10,28 +10,28 @@ class CheckPermission {
     final deviceInfo = await DeviceInfoPlugin().androidInfo;
     PermissionStatus perm;
     PermissionStatus permAudio;
-    PermissionStatus permVideos;
+    // PermissionStatus permVideos;
     PermissionStatus permImages;
-    PermissionStatus permExtStorage;
+    // PermissionStatus permExtStorage;
     // PermissionStatus permMediaLibrary;
     // PermissionStatus permaccMediaLoc;
     if (deviceInfo.version.sdkInt > 32) {
       permAudio = await Permission.audio.request();
-      permVideos = await Permission.videos.request();
+      // permVideos = await Permission.videos.request();
       permImages = await Permission.photos.request();
       // permExtStorage = await Permission.manageExternalStorage.request();
       // permMediaLibrary = await Permission.mediaLibrary.request();
       // permaccMediaLoc = await Permission.accessMediaLocation.request();
       log('nilai permAudio: ${permAudio.isGranted}');
-      log('nilai permVideos: ${permVideos.isGranted}');
+      // log('nilai permVideos: ${permVideos.isGranted}');
       log('nilai permImages: ${permImages.isGranted}');
-      log('nilai all: ${(!(permAudio.isGranted && permVideos.isGranted && permImages.isGranted))}');
+      log('nilai all: ${(!(permAudio.isGranted && permImages.isGranted))}');
 
-      if (!(permAudio.isGranted && permVideos.isGranted && permImages.isGranted)) {
+      if (!(permAudio.isGranted && permImages.isGranted)) {
         log('Dijalankan if $checkPermission()');
 
         count = count + 1;
-        log('count : $count');
+        // log('count : $count');
         if (count <= 10) {
           checkPermission();
         }
@@ -45,16 +45,12 @@ class CheckPermission {
       perm = await Permission.storage.request();
       permAudio = await Permission.audio.request();
       // permVideos = await Permission.videos.request();
-      // permImages = await Permission.photos.request();
-      permExtStorage = await Permission.manageExternalStorage.request();
+      permImages = await Permission.photos.request();
+      // permExtStorage = await Permission.manageExternalStorage.request();
       // permMediaLibrary = await Permission.mediaLibrary.request();
       // permaccMediaLoc = await Permission.accessMediaLocation.request();
 
-      if (!(perm.isGranted && permAudio.isGranted && permExtStorage.isGranted
-          // &&
-          // permMediaLibrary.isGranted &&
-          // permaccMediaLoc.isGranted
-          )) {
+      if (!(perm.isGranted && permAudio.isGranted && permImages.isGranted)) {
         count++;
         if (count <= 10) {
           return false;

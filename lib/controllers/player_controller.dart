@@ -3,14 +3,12 @@ import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_lyric/lyrics_reader.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lrc/lrc.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
 // import 'package:path/path.dart' as path;
 // import 'package:flutter/services.dart' show rootBundle;
 
@@ -35,6 +33,7 @@ class PlayerController extends GetxController {
   RxList<String> idIndex = <String>[].obs;
   var lyricModel = LyricsModelBuilder.create().bindLyricToMain('').getModel().obs;
   RxList<dynamic> listFolderNames = [].obs;
+  // var folderList = Rxn<List<AudioModel>>();
   // Rx<BannerAd?> testTipe =
 
   // StreamController<String> controllerStream = StreamController<String>();
@@ -65,14 +64,6 @@ class PlayerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // checkPermission();
-
-    // foundMusic = listMusics; // membuat referensi, saling terhubung
-    // subscription = controllerStream.stream.listen((data) {
-    //   // Callback yang akan dijalankan saat data diterima
-    //   // Di sini, kita hanya mencetak data ke konsol
-    //   // print('Data: $data');
-    // });
   }
 
   @override
@@ -521,6 +512,8 @@ $songLyric
     return subscription;
   }
 }
+
+
    // Lakukan sesuatu dengan data lagu, misalnya:
     // filePaths.value.add(songData);
 
