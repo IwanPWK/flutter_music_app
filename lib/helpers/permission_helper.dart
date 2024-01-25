@@ -10,6 +10,7 @@ class CheckPermission {
     final deviceInfo = await DeviceInfoPlugin().androidInfo;
     PermissionStatus perm;
     PermissionStatus permAudio;
+    PermissionStatus permNearWiDev;
     // PermissionStatus permVideos;
     PermissionStatus permImages;
     // PermissionStatus permExtStorage;
@@ -17,7 +18,7 @@ class CheckPermission {
     // PermissionStatus permaccMediaLoc;
     if (deviceInfo.version.sdkInt > 32) {
       permAudio = await Permission.audio.request();
-      // permVideos = await Permission.videos.request();
+      // permNearWiDev = await Permission.nearbyWifiDevices.request();
       permImages = await Permission.photos.request();
       // permExtStorage = await Permission.manageExternalStorage.request();
       // permMediaLibrary = await Permission.mediaLibrary.request();
@@ -43,14 +44,20 @@ class CheckPermission {
       }
     } else {
       perm = await Permission.storage.request();
-      permAudio = await Permission.audio.request();
+      // permAudio = await Permission.audio.request();
       // permVideos = await Permission.videos.request();
-      permImages = await Permission.photos.request();
+      // permImages = await Permission.photos.request();
       // permExtStorage = await Permission.manageExternalStorage.request();
       // permMediaLibrary = await Permission.mediaLibrary.request();
       // permaccMediaLoc = await Permission.accessMediaLocation.request();
 
-      if (!(perm.isGranted && permAudio.isGranted && permImages.isGranted)) {
+      log('nilai perm: ${perm.isGranted}');
+      // log('nilai permAudio: ${permAudio.isGranted}');
+      // log('nilai permVideos: ${permVideos.isGranted}');
+      // log('nilai permImages: ${permImages.isGranted}');
+      // log('nilai all: ${(!(permAudio.isGranted && permImages.isGranted))}');
+
+      if (!(perm.isGranted)) {
         count++;
         if (count <= 10) {
           return false;

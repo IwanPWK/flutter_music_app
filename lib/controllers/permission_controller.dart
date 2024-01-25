@@ -9,12 +9,6 @@ class PermissionController extends GetxController {
   var isApprove = Rxn<bool>();
   RxBool isPermission = false.obs;
 
-  @override
-  onClose() {
-    super.onClose();
-    permissionHandler();
-  }
-
   // Permission Handler
   Future<void> permissionHandler() async {
     isApprove(await CheckPermission.checkPermission());

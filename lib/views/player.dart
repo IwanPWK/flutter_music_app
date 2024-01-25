@@ -11,7 +11,7 @@ import '../controllers/player_controller.dart';
 import '../models/audio_model.dart';
 
 class Player extends StatelessWidget {
-  final List<AudioModel> data;
+  final List<dynamic> data;
   var lyricUI = UINetease();
   StreamSubscription? subscription;
 

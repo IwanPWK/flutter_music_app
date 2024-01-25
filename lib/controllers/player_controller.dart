@@ -15,6 +15,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import '../helpers/path_helper.dart';
 import '../models/audio_model.dart';
 import '../models/folder_model.dart';
+import 'admob_controller.dart';
 
 class PlayerController extends GetxController {
   final audioQuery = OnAudioQuery();
@@ -27,12 +28,13 @@ class PlayerController extends GetxController {
   RxMap<String, List<AudioModel>> foundGroupedFiles = <String, List<AudioModel>>{}.obs;
   RxList<String> directoryPaths = <String>[].obs;
   RxList<AudioModel> listMusics = <AudioModel>[].obs;
-  RxList<AudioModel> foundMusic = <AudioModel>[].obs;
+  RxList<dynamic> foundMusic = <dynamic>[].obs;
   // RxList<FolderData> foundFolder = <FolderData>[].obs;
   RxList<FolderData> listFolder = <FolderData>[].obs;
   RxList<String> idIndex = <String>[].obs;
   var lyricModel = LyricsModelBuilder.create().bindLyricToMain('').getModel().obs;
   RxList<dynamic> listFolderNames = [].obs;
+  // var audioModels = AudioModel().obs;
   // var folderList = Rxn<List<AudioModel>>();
   // Rx<BannerAd?> testTipe =
 
@@ -56,10 +58,11 @@ class PlayerController extends GetxController {
   var isFolderAscending = true.obs;
   var isListToPlayer = true.obs;
   var duration = ''.obs;
-  var position = ''.obs;
+  var position = '0:00:00'.obs;
 
   var max = 11.0.obs;
   var value = 0.0.obs;
+  var sliderValue = 0.0;
 
   @override
   void onInit() {
@@ -87,7 +90,7 @@ class PlayerController extends GetxController {
           Uri.parse(playUri.value),
         ),
       );
-      max.value = foundMusic[index].duration!.toDouble();
+      // foundMusic[index].max = foundMusic[index].duration!.inMilliseconds.toDouble();
       updatePosition();
       isStop(false);
       isPause(false);
@@ -179,15 +182,21 @@ class PlayerController extends GetxController {
   updatePosition() {
     audioPlayer.durationStream.listen(
       (d) {
-        duration.value = d.toString().split(".")[0];
-        max.value = d!.inMilliseconds.toDouble();
+        foundMusic[playIndex.value].duration = (d.toString().split(".")[0]);
+        foundMusic[playIndex.value].max = (d!.inMilliseconds.toDouble());
+        update();
+        {}
       },
     );
     audioPlayer.positionStream.listen(
       (p) {
-        position.value = p.toString().split(".")[0];
-        value.value = p.inMilliseconds.toDouble();
-        playProgress.value = p.inMilliseconds;
+        foundMusic[playIndex.value].position = (p.toString().split(".")[0]);
+        foundMusic[playIndex.value].val = (p.inMilliseconds.toDouble());
+        // playProgress.value = p.inMilliseconds;
+        update();
+        {
+          value.value = p.inMilliseconds.toDouble();
+        }
       },
     );
   }
@@ -214,15 +223,16 @@ class PlayerController extends GetxController {
     // songs.value = queriedSongs;
     // log('cek songsssssssssss: ${queriedSongs}');
     // log('Jumlah $num');
-    log("Cek queriedSongsss: ${queriedSongs[0].duration}");
+    log("Cek queriedSongsss: ${queriedSongs[6]}");
     songList.value = List.from(queriedSongs.map((data) => AudioModel.fromAudioQuery(data)));
-    log('cek cek cek cek');
     // await Future.delayed(Duration.zero);
     // log('Cek songList: $audioList');
-
+    groupedFiles.clear();
     for (AudioModel audioModel in songList.value) {
+      int currentIndex = 0;
       String folderName = getFolderName(audioModel.directoryPath!);
       log('Cek folderName: $folderName');
+
       if (!groupedFiles.containsKey(folderName)) {
         groupedFiles[folderName] = [];
       }
@@ -231,6 +241,20 @@ class PlayerController extends GetxController {
       }
       groupedFiles[folderName]!.add(audioModel);
       foundGroupedFiles[folderName]!.add(audioModel);
+      listFolderNames.clear();
+      for (String element in foundGroupedFiles.keys) {
+        // controller.listFolderNames.add(element);
+
+        if (currentIndex % 1 == 0 && currentIndex != 0) {
+          listFolderNames.add(Get.put(AdMobController(), tag: '$currentIndex').bannerAd.value);
+          listFolderNames.add(element);
+        } else {
+          listFolderNames.add(element);
+          // log('listFolderNames else dijalankan');
+        }
+        // log('cek nilai listFolderNames: $listFolderNames');
+        currentIndex++;
+      }
     }
     log('Cek groupedFiles: $groupedFiles');
     // for (int index = 0; index < queriedSongs.length; index++) {
@@ -381,7 +405,8 @@ $songLyric
   }
 
   void runFilterTitle(String enteredKeyword) {
-    List<AudioModel> results = [];
+    int currentIndex = 0;
+    List<dynamic> results = [];
     log('cek listMusicssss : ${listMusics.value}');
     if (enteredKeyword.isEmpty) {
       // if the search field is empty or only contains white-space, we'll display all users
@@ -391,16 +416,30 @@ $songLyric
       log('cek listMusicssss 12345 : ${listMusics.value}');
       // we use the toLowerCase() method to make it case-insensitive
     }
+    foundMusic.clear();
+    for (var element in results) {
+      // controller.listFolderNames.add(element);
+      if (currentIndex % 1 == 0 && currentIndex != 0) {
+        foundMusic.add(Get.put(AdMobController(), tag: 'rFT$currentIndex').bannerAd.value);
+        foundMusic.add(element);
+      } else {
+        foundMusic.add(element);
+        // log('listFolderNames else dijalankan');
+      }
+      // log('cek nilai listFolderNames: $listFolderNames');
+      currentIndex++;
+    }
 
     // Refresh the UI
 
-    foundMusic.value = results;
+    // foundMusic.value = results;
     log('cek results : $results');
     log('cek entered keyword : $enteredKeyword');
     log('cek foundMusic : ${foundMusic.value}');
   }
 
   void runFilterGroupedFiles(String enteredKeyword) {
+    int currentIndex = 0;
     Map<String, List<AudioModel>> results = {};
     if (enteredKeyword.isEmpty) {
       // if the search field is empty or only contains white-space, we'll display all users
@@ -409,14 +448,38 @@ $songLyric
       results = Map.fromEntries(groupedFiles.entries.where((entry) => entry.key.toLowerCase().contains(enteredKeyword.toLowerCase())));
       // we use the toLowerCase() method to make it case-insensitive
     }
+    listFolderNames.clear();
+    for (String element in results.keys) {
+      // controller.listFolderNames.add(element);
+      if (currentIndex % 1 == 0 && currentIndex != 0) {
+        listFolderNames.add(Get.put(AdMobController(), tag: 'rFGF$currentIndex').bannerAd.value);
+        listFolderNames.add(element);
+      } else {
+        listFolderNames.add(element);
+        // log('listFolderNames else dijalankan');
+      }
+      // log('cek nilai listFolderNames: $listFolderNames');
+      currentIndex++;
+    }
     foundGroupedFiles.value = results;
   }
 
   sortTitleList(bool isAscending) {
-    foundMusic.sort((a, b) {
+    int currentIndex = 0;
+    log('cek foundMusic : ${foundMusic.value}');
+    List<dynamic> filteredMusic = foundMusic.where((audio) {
+      if (audio is AudioModel) {
+        String cleanedTitle = audio.title?.replaceAll("'", "\\'") ?? '';
+        log('cek title: $cleanedTitle');
+        return cleanedTitle.isNotEmpty;
+      }
+      return false;
+    }).toList();
+    filteredMusic.sort((a, b) {
       if (isAscending) {
         // foundMusic.value = foundMusic.toList();
         log('sedang ditest isAscending ${foundMusic.value}');
+
         return a.title!.compareTo(b.title!);
       } else {
         // foundMusic.value = foundMusic.toList();
@@ -424,11 +487,27 @@ $songLyric
         return b.title!.compareTo(a.title!);
       }
     });
-    foundMusic.value = foundMusic.toList();
+    // foundMusic.value = foundMusic.toList();
+    foundMusic.clear();
+    for (var element in filteredMusic) {
+      // controller.listFolderNames.add(element);
+
+      if (currentIndex % 1 == 0 && currentIndex != 0) {
+        foundMusic.add(Get.put(AdMobController(), tag: 'sTL$currentIndex').bannerAd.value);
+        foundMusic.add(element);
+      } else {
+        foundMusic.add(element);
+        // log('listFolderNames else dijalankan');
+      }
+      // log('cek nilai listFolderNames: $listFolderNames');
+      currentIndex++;
+    }
+
     log('sedang ditest isFinal ${foundMusic.value}');
   }
 
   sortFolderList(bool isAscending) {
+    int currentIndex = 0;
     Map<String, List<AudioModel>> results;
 
     results = SplayTreeMap<String, List<AudioModel>>.from(foundGroupedFiles, (a, b) {
@@ -440,6 +519,19 @@ $songLyric
     log('cek results sort folder : ${results.keys.elementAt(0)}, ${results.keys.elementAt(1)}, ${results.keys.elementAt(2)}, ${results.keys.elementAt(3)}');
     log('cek nilai results : $results');
     foundGroupedFiles.clear();
+    listFolderNames.clear();
+    for (var element in results.keys) {
+      // controller.listFolderNames.add(element);
+      if (currentIndex % 1 == 0 && currentIndex != 0) {
+        listFolderNames.add(Get.put(AdMobController(), tag: 'sFL$currentIndex').bannerAd.value);
+        listFolderNames.add(element);
+      } else {
+        listFolderNames.add(element);
+        // log('listFolderNames else dijalankan');
+      }
+      // log('cek nilai listFolderNames: $listFolderNames');
+      currentIndex++;
+    }
     foundGroupedFiles.addAll(RxMap<String, List<AudioModel>>.from(results));
   }
 
@@ -472,63 +564,69 @@ $songLyric
   searchNewPlayIndex() {
     int newPlayIndex;
     String searchedIndex = playUri.value;
-    newPlayIndex = foundMusic.indexWhere((data) => data.uri == searchedIndex);
+    newPlayIndex = foundMusic.indexWhere((data) => ((data is AudioModel) ? data.uri : null) == searchedIndex);
     playIndex.value = newPlayIndex == -1 ? playIndex.value : newPlayIndex;
     log('cek new play index : ${playIndex.value}');
   }
 
-  StreamSubscription<double>? autoNextPlay(PlayerController controller, List<AudioModel> finalData) {
-    StreamSubscription<double>? subscription;
-    subscription = controller.value.listen((newValue) {
-      'log(cek max value : ${controller.max.value})';
-      if (newValue >= controller.max.value && (playIndex.value) < (finalData.length - 1)) {
-        // playIndex.value = index;
-        // log('cek max value : ${controller.max.value}');
-        log('pertama dijalankan');
-        // Panggil metode atau fungsi yang ingin dijalankan
-        log('cek index di autoNextPlay 0: ${playIndex.value}');
-        playIndex.value += 1;
-        controller.playSong(finalData[playIndex.value].uri, playIndex.value);
-        log('cek index di autoNextPlay 1: ${playIndex.value}');
-        log('cek finalData.length di autoNextPlay : ${finalData.length}');
-        controller.showLyric(finalData[playIndex.value].audioPath);
-      } else if (newValue >= controller.max.value && (playIndex.value + 1) > (finalData.length - 1)) {
-        log('cek index di kedua autoNextPlay 0: ${playIndex.value}');
-        // playIndex.value += 1;
-        controller.stopSongPlayer();
-        log('kedua dijalankan');
-        log('cek index di kedua autoNextPlay 1: ${playIndex.value}');
-        if (subscription != null) {
-          subscription.cancel();
-        }
-      } else if (newValue >= controller.max.value) {
-        controller.stopSongPlayer();
-        log('ketiga dijalankan');
-        if (subscription != null) {
-          subscription.cancel();
-        }
+  StreamSubscription<double>? autoNextPlay(PlayerController controller, List<dynamic> finalData) {
+    // StreamSubscription<double>? subscription;
+    // log('cek finalData value : ${controller.value is Stream} ');
+    // subscription = /*(controller.foundMusic[playIndex.value].val as RxDouble)*/ controller.value.listen((newValue) {
+    //   log('cek finalData value : ${controller.value is Stream} ');
+    //   if ((finalData[playIndex.value] is AudioModel) && newValue >= finalData[playIndex.value].max && (playIndex.value) < (finalData.length - 1)) {
+    //     // playIndex.value = index;
+    //     // log('cek max value : ${controller.max.value}');
+    //     log('pertama dijalankan');
+    //     // Panggil metode atau fungsi yang ingin dijalankan
+    //     log('cek index di autoNextPlay 0: ${playIndex.value}');
+    //     playIndex.value += 1;
+    //     playSong(finalData[playIndex.value].uri, playIndex.value);
+    //     log('cek index di autoNextPlay 1: ${playIndex.value}');
+    //     log('cek finalData.length di autoNextPlay : ${finalData.length}');
+    //     showLyric(finalData[playIndex.value].audioPath);
+    //   } else if (newValue >= finalData[playIndex.value].max && (playIndex.value + 1) > (finalData.length - 1)) {
+    //     log('cek index di kedua autoNextPlay 0: ${playIndex.value}');
+    //     // playIndex.value += 1;
+    //     stopSongPlayer();
+    //     log('kedua dijalankan');
+    //     log('cek index di kedua autoNextPlay 1: ${playIndex.value}');
+    //     if (subscription != null) {
+    //       subscription.cancel();
+    //     }
+    //   } else if (newValue >= finalData[playIndex.value].max) {
+    //     stopSongPlayer();
+    //     log('ketiga dijalankan');
+    //     if (subscription != null) {
+    //       subscription.cancel();
+    //     }
+    //   }
+    // });
+    // return subscription;
+  }
+
+  fetchFoundMusic() {
+    int currentIndex = 0;
+    List<dynamic> current = [];
+    for (AudioModel element in foundMusic.value) {
+      // controller.listFolderNames.add(element);
+
+      if (currentIndex % 2 == 0 && currentIndex != 0) {
+        current.add(Get.put(AdMobController(), tag: 'fFM$currentIndex').bannerAd.value);
+        current.add(element);
+      } else {
+        current.add(element);
+        // log('listFolderNames else dijalankan');
       }
-    });
-    return subscription;
+      // log('cek nilai listFolderNames: $listFolderNames');
+      currentIndex++;
+    }
+    foundMusic.value = current.toList();
+  }
+
+  updateSliderValue(value) {
+    sliderValue = value;
+    update();
+    return sliderValue;
   }
 }
-
-
-   // Lakukan sesuatu dengan data lagu, misalnya:
-    // filePaths.value.add(songData);
-
-    // for (String filePath in filePaths) {
-    //   String folderName = getFolderName(filePath);
-    //   if (!groupedFiles.containsKey(folderName)) {
-    //     groupedFiles[folderName] = [];
-    //   }
-    //   groupedFiles[folderName]!.add(queriedSongs);
-    // }
-    // log('Folder Name: $folders');
-
-    // Tampilkan hasil query jika diperlukan
-    // log('Total Songs: ${songs.length}');
-    // log('cek queriedSongs: ${queriedSongs}');
-    // for (var song in songs) {
-    //   log('Song Title: ${song.title}, Artist: ${song.artist}');
-    // }
